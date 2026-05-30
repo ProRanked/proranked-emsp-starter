@@ -19,7 +19,7 @@
  *   node --experimental-strip-types src/demo.ts
  */
 
-import { PhevnixApiError, PhevnixEmspClient } from './client.ts';
+import { PhevnixApiError, PhevnixEmspClient } from '../src/lib/phevnix.ts';
 
 const BASE_URL = process.env.EMSP_BASE_URL ?? 'https://api.phevnix.cloud';
 const API_KEY = required('EMSP_API_KEY');

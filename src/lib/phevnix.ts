@@ -69,6 +69,28 @@ export class PhevnixEmspClient {
     return !!this.accessToken;
   }
 
+  /** Rehydrate a persisted driver session (e.g. from localStorage) after a reload. */
+  restoreSession(s: { accessToken?: string; refreshToken?: string; tokenUid?: string }): void {
+    if (s.accessToken) this.accessToken = s.accessToken;
+    if (s.refreshToken) this.refreshToken = s.refreshToken;
+    if (s.tokenUid) this.tokenUid = s.tokenUid;
+  }
+
+  /** Drop all auth state (logout). */
+  clearSession(): void {
+    this.accessToken = undefined;
+    this.refreshToken = undefined;
+    this.tokenUid = undefined;
+  }
+
+  get currentAccessToken(): string | undefined {
+    return this.accessToken;
+  }
+
+  get currentRefreshToken(): string | undefined {
+    return this.refreshToken;
+  }
+
   // ── Core request helper ────────────────────────────────────────────────
 
   private async request<T>(method: string, path: string, opts: { query?: Query; body?: unknown } = {}): Promise<T> {

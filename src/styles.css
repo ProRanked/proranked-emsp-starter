@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* Voltway brand — electric teal on near-black, mobile-first. */
+@theme {
+  --color-ink: #0a0a0f;
+  --color-ink-soft: #14141d;
+  --color-card: #181824;
+  --color-card-2: #1f1f2e;
+  --color-line: #2a2a3a;
+  --color-volt: #2ee6a6;
+  --color-volt-dim: #1d8c66;
+  --color-amber: #f5b544;
+  --color-rose: #f25f7c;
+  --color-text: #f4f5fb;
+  --color-text-soft: #a6a8bd;
+  --color-text-faint: #6c6e85;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-ink);
+  color: var(--color-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* The app is framed as a phone on wide screens, full-bleed on mobile. */
+.phone-frame {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100%;
+  position: relative;
+  background: var(--color-ink);
+}
+
+@media (min-width: 480px) {
+  .phone-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: 24px 0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(46,230,166,0.10), transparent 60%),
+      var(--color-ink);
+  }
+  .phone-frame {
+    min-height: 860px;
+    border: 1px solid var(--color-line);
+    border-radius: 38px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes pulse-volt {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.animate-pulse-volt { animation: pulse-volt 1.6s ease-in-out infinite; }
+
+@keyframes energy-flow {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}

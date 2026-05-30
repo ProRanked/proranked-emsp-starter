@@ -112,16 +112,18 @@ async function step<T>(label: string, fn: () => Promise<T>, opts: { allowFail?: 
     console.log('ok');
     return result;
   } catch (err) {
-    if (err instanceof PhevnixApiError) {
-      if (err.errorCode === 'feature_disabled') {
-        console.log(`skipped (capability disabled for this network)`);
-        return undefined;
-      }
-      console.log(`${err.status} ${err.errorCode ?? ''} — ${err.message}`);
-      if (!opts.allowFail) throw err;
+    if (err instanceof PhevnixApiError && err.errorCode === 'feature_disabled') {
+      console.log('skipped (capability disabled for this network)');
       return undefined;
     }
-    console.log('error');
+    const detail = err instanceof PhevnixApiError
+      ? `${err.status} ${err.errorCode ?? ''} — ${err.message}`.trim()
+      : err instanceof Error ? err.message : String(err);
+    if (opts.allowFail) {
+      console.log(`skipped (${detail})`);
+      return undefined;
+    }
+    console.log(`error — ${detail}`);
     throw err;
   }
 }

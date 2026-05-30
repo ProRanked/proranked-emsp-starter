@@ -104,16 +104,25 @@ export class PhevnixEmspClient {
 
   // ── Driver auth ────────────────────────────────────────────────────────
 
-  async register(input: { email: string; password: string; firstName: string; lastName: string; phone?: string }): Promise<unknown> {
-    return this.request('POST', '/emsp/v1/auth/driver/register', { body: input });
+  async register(input: { email: string; password: string; firstName: string; lastName: string; phone?: string }): Promise<DriverSession> {
+    // Registration auto-provisions the driver's charge token and returns its uid — capture it,
+    // because the login response (below) does not echo it back.
+    const session = await this.request<DriverSession>('POST', '/emsp/v1/auth/driver/register', { body: input });
+    this.applySession(session);
+    return session;
   }
 
   async login(email: string, password: string): Promise<DriverSession> {
     const session = await this.request<DriverSession>('POST', '/emsp/v1/auth/driver/login', { body: { email, password } });
-    this.accessToken = session.accessToken;
-    this.refreshToken = session.refreshToken;
-    this.tokenUid = session.driver?.tokenUid;
+    this.applySession(session);
     return session;
+  }
+
+  /** Capture tokens from an auth response without clobbering a known tokenUid with undefined. */
+  private applySession(session: DriverSession): void {
+    if (session.accessToken) this.accessToken = session.accessToken;
+    if (session.refreshToken) this.refreshToken = session.refreshToken;
+    if (session.driver?.tokenUid) this.tokenUid = session.driver.tokenUid;
   }
 
   async refresh(): Promise<DriverSession> {

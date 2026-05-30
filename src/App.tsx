@@ -9,6 +9,7 @@ import { ChargerScreen } from './screens/ChargerScreen.tsx';
 import { SessionScreen } from './screens/SessionScreen.tsx';
 import { ReservationsScreen } from './screens/ReservationsScreen.tsx';
 import { FavoritesScreen } from './screens/FavoritesScreen.tsx';
+import { VehiclesScreen } from './screens/VehiclesScreen.tsx';
 import { AccountScreen } from './screens/AccountScreen.tsx';
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -36,6 +37,7 @@ export function App() {
         <Route path="/session" element={<SessionScreen />} />
         <Route path="/reservations" element={<ReservationsScreen />} />
         <Route path="/favorites" element={<FavoritesScreen />} />
+        <Route path="/vehicles" element={<VehiclesScreen />} />
         <Route path="/account" element={<AccountScreen />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

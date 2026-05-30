@@ -8,6 +8,27 @@ charging infrastructure of their own — just a publishable API key.
 > Mobile-first React web app. The same typed SDK (`src/lib/phevnix.ts`) powers a React
 > Native / Expo build for iOS & Android with no API changes — only the screens differ.
 
+## Make it yours (vibe-code your own app)
+
+This repo is a **starter kit**. To build your own eMobility app:
+
+1. **Get a publishable key** — Portal → Developer → create an eMSP (publishable) key. It
+   starts with `phx_`, is read-only until a driver logs in, and is safe to ship in a client app.
+2. **Drop it in** — `cp .env.example .env`, set `VITE_EMSP_API_KEY=phx_…`, `npm install`,
+   `npm run dev`. That's it — the app is now running on *your* network's data.
+3. **Re-skin and remix** — change the brand in `src/styles.css` + `AuthScreen`, keep or
+   replace any screen. Every API call lives in one typed file: [`src/lib/phevnix.ts`](src/lib/phevnix.ts).
+   That file *is* the SDK and the complete API reference — every `/emsp/v1` endpoint is a method.
+
+**Vibe-coding with an LLM?** Point it at `src/lib/phevnix.ts` and paste a prompt like:
+
+> "Using the `PhevnixEmspClient` in `src/lib/phevnix.ts`, build me a screen that lists the
+> driver's reservations and lets them cancel one. Match the design system in `src/components/ui.tsx`."
+
+The client handles the hard parts for you: the publishable-key + driver-JWT two-layer auth,
+**silent token refresh** on expiry, response unwrapping, and typed errors (`PhevnixApiError`
+with `.errorCode` like `feature_disabled`). You write screens; it talks to the API.
+
 ## What it demonstrates
 
 A real driver journey, every screen backed by a live `/emsp/v1` call:

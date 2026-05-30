@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, Spinner, Toggle, Button, Banner, useAsync } from '../components/ui.tsx';
-import { BellIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
+import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
 import type { NotificationPreferences, PaymentConfig } from '../lib/types.ts';
 
 export function AccountScreen() {
@@ -101,6 +101,9 @@ export function AccountScreen() {
         {/* Account actions */}
         <section>
           <Card className="divide-y divide-line p-0">
+            <button onClick={() => navigate('/vehicles')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[14px]">
+              <BoltIcon className="h-5 w-5 text-text-soft" /> My vehicles
+            </button>
             <button onClick={() => navigate('/reservations')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[14px]">
               <UserIcon className="h-5 w-5 text-text-soft" /> My reservations
             </button>

@@ -35,6 +35,8 @@ interface PhevnixContextValue {
 const PhevnixContext = createContext<PhevnixContextValue | null>(null);
 
 export function PhevnixProvider({ children }: { children: ReactNode }) {
+  const [driver, setDriver] = useState<Driver | null>(() => readSaved()?.driver ?? null);
+
   // Calls go same-origin (window.location.origin) and Vite proxies /emsp → the gateway.
   // Rehydrate any saved session synchronously so a page reload doesn't bounce to /login
   // before an effect runs (the auth guard reads `driver` on the very first render).
@@ -42,10 +44,17 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
     const c = new PhevnixEmspClient({
       baseUrl: window.location.origin,
       apiKey: API_KEY,
-      // Persist silently-refreshed tokens so a reload keeps the session alive.
       onTokensChanged: (t) => {
+        if (!t.accessToken) {
+          // The token expired AND the refresh failed (or there's no refresh token). Log out so
+          // the auth guard routes to /login instead of every screen erroring with a stale token.
+          localStorage.removeItem(STORAGE_KEY);
+          setDriver(null);
+          return;
+        }
+        // Persist silently-refreshed (rotated) tokens so a reload keeps the session alive.
         const saved = readSaved();
-        if (!saved || !t.accessToken) return;
+        if (!saved) return;
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, accessToken: t.accessToken, refreshToken: t.refreshToken ?? saved.refreshToken, tokenUid: t.tokenUid ?? saved.tokenUid }));
       },
     });
@@ -53,8 +62,6 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
     if (saved) c.restoreSession(saved);
     return c;
   }, []);
-
-  const [driver, setDriver] = useState<Driver | null>(() => readSaved()?.driver ?? null);
 
   function persist(session: DriverSession) {
     const driverInfo: Driver = { ...session.driver, tokenUid: session.driver?.tokenUid ?? client.tokenUid };

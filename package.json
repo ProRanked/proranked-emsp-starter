@@ -1,0 +1,28 @@
+{
+  "name": "phevnix-emsp-sample-app",
+  "version": "0.1.0",
+  "description": "Reference client + end-to-end demo for the Phevnix eMSP API (/emsp/v1).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo": "node --experimental-strip-types src/demo.ts",
+    "start": "npm run demo"
+  },
+  "keywords": [
+    "phevnix",
+    "ev-charging",
+    "emsp",
+    "ocpi",
+    "api-client",
+    "sample"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}

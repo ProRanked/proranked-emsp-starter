@@ -18,6 +18,10 @@ export interface PhevnixEmspClientOptions {
   apiKey: string;
   /** Optional: an existing driver access token to start authenticated. */
   accessToken?: string;
+  /** Fired whenever the access/refresh tokens change (login, register, silent refresh) so a host
+   *  app can persist them. The driver access token is short-lived (~15 min) — the client refreshes
+   *  it automatically on a 401, but the host should persist the rotated tokens to survive reloads. */
+  onTokensChanged?: (tokens: { accessToken?: string; refreshToken?: string; tokenUid?: string }) => void;
 }
 
 export class PhevnixApiError extends Error {
@@ -56,6 +60,8 @@ export class PhevnixEmspClient {
   private readonly apiKey: string;
   private accessToken?: string;
   private refreshToken?: string;
+  private readonly onTokensChanged?: PhevnixEmspClientOptions['onTokensChanged'];
+  private refreshing?: Promise<void>;
   /** Captured at login — the idTag to authorize charging on this driver's behalf. */
   tokenUid?: string;
 
@@ -63,6 +69,11 @@ export class PhevnixEmspClient {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.apiKey = opts.apiKey;
     this.accessToken = opts.accessToken;
+    this.onTokensChanged = opts.onTokensChanged;
+  }
+
+  private emitTokens(): void {
+    this.onTokensChanged?.({ accessToken: this.accessToken, refreshToken: this.refreshToken, tokenUid: this.tokenUid });
   }
 
   get isAuthenticated(): boolean {
@@ -93,7 +104,7 @@ export class PhevnixEmspClient {
 
   // ── Core request helper ────────────────────────────────────────────────
 
-  private async request<T>(method: string, path: string, opts: { query?: Query; body?: unknown } = {}): Promise<T> {
+  private async request<T>(method: string, path: string, opts: { query?: Query; body?: unknown } = {}, _retried = false): Promise<T> {
     const url = new URL(this.baseUrl + path);
     for (const [k, v] of Object.entries(opts.query ?? {})) {
       if (v !== undefined) url.searchParams.set(k, String(v));
@@ -114,6 +125,22 @@ export class PhevnixEmspClient {
 
     if (!res.ok) {
       const code = (json as any)?.error ?? (json as any)?.errorCode;
+      // The driver access token expires (~15 min). When it lapses the API may answer 401, or — on
+      // a write with a stale token downgraded to "no driver" — 403 public_key_write_denied /
+      // driver_required. In all of these, transparently refresh once and retry so the app never
+      // breaks mid-session. Auth endpoints themselves never recurse.
+      const refreshable =
+        res.status === 401 ||
+        (res.status === 403 && (code === 'public_key_write_denied' || code === 'driver_required'));
+      if (refreshable && !_retried && this.refreshToken && !path.startsWith('/emsp/v1/auth/driver')) {
+        try {
+          await this.ensureRefreshed();
+          return this.request<T>(method, path, opts, true);
+        } catch {
+          this.clearSession();
+          this.emitTokens();
+        }
+      }
       const message = (json as any)?.message ?? (json as any)?.detail ?? `HTTP ${res.status}`;
       throw new PhevnixApiError(res.status, code, message, json ?? text);
     }
@@ -122,6 +149,14 @@ export class PhevnixEmspClient {
       return (json as any).data as T;
     }
     return json as T;
+  }
+
+  /** Refresh the access token at most once even if many requests 401 at the same time. */
+  private ensureRefreshed(): Promise<void> {
+    if (!this.refreshing) {
+      this.refreshing = this.refresh().then(() => undefined).finally(() => { this.refreshing = undefined; });
+    }
+    return this.refreshing;
   }
 
   // ── Driver auth ────────────────────────────────────────────────────────
@@ -145,6 +180,7 @@ export class PhevnixEmspClient {
     if (session.accessToken) this.accessToken = session.accessToken;
     if (session.refreshToken) this.refreshToken = session.refreshToken;
     if (session.driver?.tokenUid) this.tokenUid = session.driver.tokenUid;
+    this.emitTokens();
   }
 
   async refresh(): Promise<DriverSession> {
@@ -152,6 +188,7 @@ export class PhevnixEmspClient {
     const session = await this.request<DriverSession>('POST', '/emsp/v1/auth/driver/refresh', { body: { refreshToken: this.refreshToken } });
     this.accessToken = session.accessToken;
     this.refreshToken = session.refreshToken ?? this.refreshToken;
+    this.emitTokens();
     return session;
   }
 

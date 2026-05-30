@@ -39,7 +39,16 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
   // Rehydrate any saved session synchronously so a page reload doesn't bounce to /login
   // before an effect runs (the auth guard reads `driver` on the very first render).
   const client = useMemo(() => {
-    const c = new PhevnixEmspClient({ baseUrl: window.location.origin, apiKey: API_KEY });
+    const c = new PhevnixEmspClient({
+      baseUrl: window.location.origin,
+      apiKey: API_KEY,
+      // Persist silently-refreshed tokens so a reload keeps the session alive.
+      onTokensChanged: (t) => {
+        const saved = readSaved();
+        if (!saved || !t.accessToken) return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, accessToken: t.accessToken, refreshToken: t.refreshToken ?? saved.refreshToken, tokenUid: t.tokenUid ?? saved.tokenUid }));
+      },
+    });
     const saved = readSaved();
     if (saved) c.restoreSession(saved);
     return c;

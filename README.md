@@ -73,6 +73,18 @@ Vite proxies `/emsp/*` to the gateway (`VITE_EMSP_BASE_URL`, default the lab
 npm run build               # type-check + production bundle
 ```
 
+## Test against a live charger (no hardware)
+
+A driver app needs an **online charger** to start a real session. While building, spin one up:
+
+```bash
+npm run sim                 # an OCPP charger comes online (see tools/README.md)
+```
+
+It connects to the CSMS as a real OCPP 1.6 charge point and responds to everything the app
+triggers — Start/Stop, reserve, set-charging-speed — streaming live meter values back. Point it
+at your own CSMS + charge-point id with `CSMS_WS` / `CP_ID`. Full docs: [`tools/README.md`](tools/README.md).
+
 ## How auth works (the important bit)
 
 Two layers, both handled by [`PhevnixEmspClient`](src/lib/phevnix.ts):

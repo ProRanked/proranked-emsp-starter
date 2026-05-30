@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit || tsc -p tsconfig.json --noEmit",
-    "cli-demo": "node --experimental-strip-types examples/cli-demo.ts"
+    "cli-demo": "node --experimental-strip-types examples/cli-demo.ts",
+    "sim": "node tools/ocpp-sim.mjs"
   },
   "keywords": [
     "phevnix",
@@ -35,6 +36,7 @@
     "tailwindcss": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "typescript": "^5.6.0",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "ws": "^8.18.0"
   }
 }

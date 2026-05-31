@@ -62,6 +62,99 @@ const ES: Record<string, string> = {
   'Create account': 'Crear cuenta',
   'Charge tag': 'Etiqueta de carga',
   kWh: 'kWh',
+  // Live session
+  Charging: 'Cargando',
+  'Charging controls': 'Controles de carga',
+  'kWh delivered': 'kWh entregados',
+  'No active session. Start one from a charger — your live energy, power, and cost will appear here.':
+    'No hay sesión activa. Inicia una desde un cargador: verás tu energía, potencia y costo en vivo aquí.',
+  'kW now': 'kW ahora',
+  minutes: 'minutos',
+  min: 'min',
+  cost: 'costo',
+  'Charging speed': 'Velocidad de carga',
+  'Eco · 6 A': 'Eco · 6 A',
+  'Max · 32 A': 'Máx · 32 A',
+  // Charger detail
+  Charger: 'Cargador',
+  'Max power': 'Potencia máx.',
+  'Energy rate': 'Tarifa de energía',
+  Free: 'Gratis',
+  'Choose a connector': 'Elige un conector',
+  Connector: 'Conector',
+  'This charger is': 'Este cargador es',
+  'Free to use': 'Gratis',
+  Time: 'Tiempo',
+  'Session fee': 'Cargo por sesión',
+  'Idle fee': 'Cargo por inactividad',
+  "You're charging here now": 'Estás cargando aquí ahora',
+  'View live session': 'Ver sesión en vivo',
+  'Reserve for 15 min': 'Reservar por 15 min',
+  'Billed to your Voltway account when the session ends.':
+    'Se cobrará a tu cuenta Voltway al terminar la sesión.',
+  'Connector reserved for 15 minutes. Head over and plug in.':
+    'Conector reservado por 15 minutos. Ve y conéctate.',
+  'This connector is in use right now. Try another connector or come back shortly.':
+    'Este conector está en uso ahora. Prueba otro conector o vuelve en un momento.',
+  'This charger is offline right now. Try another connector or site.':
+    'Este cargador está fuera de línea ahora. Prueba otro conector o sitio.',
+  'This connector is reserved right now. Try another connector.':
+    'Este conector está reservado ahora. Prueba otro conector.',
+  // Location detail
+  'Charging site': 'Estación de carga',
+  'Chargers at this site': 'Cargadores en este sitio',
+  'No chargers listed': 'No hay cargadores listados',
+  'Saved places aren’t enabled by your provider.': 'Tu proveedor no ha habilitado los lugares guardados.',
+  'Could not save.': 'No se pudo guardar.',
+  of: 'de',
+  // Activity / receipt
+  'Start a session and it’ll appear here with a full receipt.':
+    'Inicia una sesión y aparecerá aquí con un recibo completo.',
+  'kWh total': 'kWh total',
+  'Charging session': 'Sesión de carga',
+  Started: 'Iniciado',
+  Ended: 'Finalizado',
+  'Authorized via': 'Autorizado vía',
+  'Idle time': 'Tiempo inactivo',
+  Charges: 'Cargos',
+  Taxes: 'Impuestos',
+  Total: 'Total',
+  'peak kW': 'kW máx.',
+  'Receipt copied to clipboard.': 'Recibo copiado al portapapeles.',
+  // Favorites
+  'Saved places': 'Lugares guardados',
+  'Your go-to charging spots': 'Tus sitios de carga favoritos',
+  'Saved places aren’t enabled yet': 'Los lugares guardados aún no están habilitados',
+  'Your charging provider hasn’t turned on saved places. It can be enabled any time — no app update needed.':
+    'Tu proveedor de carga no ha activado los lugares guardados. Se puede habilitar en cualquier momento, sin actualizar la app.',
+  'No saved places': 'No hay lugares guardados',
+  'Tap the heart on any site to save it here.': 'Toca el corazón en cualquier sitio para guardarlo aquí.',
+  'Saved place': 'Lugar guardado',
+  // Reservations
+  Reservations: 'Reservas',
+  'Connectors you’ve held for later': 'Conectores que reservaste para más tarde',
+  'Reservations aren’t enabled by your provider.': 'Tu proveedor no ha habilitado las reservas.',
+  'No reservations': 'No hay reservas',
+  'Reserve a connector from a charger and it’ll show up here.':
+    'Reserva un conector desde un cargador y aparecerá aquí.',
+  'Hold expires': 'La reserva vence',
+  Tag: 'Etiqueta',
+  'Cancel reservation': 'Cancelar reserva',
+  // Vehicles
+  'Cars linked to your account': 'Autos vinculados a tu cuenta',
+  'Vehicles aren’t enabled yet': 'Los vehículos aún no están habilitados',
+  'Your provider hasn’t turned on vehicle linking (e.g. Smartcar). It can be enabled any time — no app update needed.':
+    'Tu proveedor no ha activado la vinculación de vehículos (p. ej. Smartcar). Se puede habilitar en cualquier momento, sin actualizar la app.',
+  'No vehicles yet': 'Aún no hay vehículos',
+  'Add your EV to personalize charging.': 'Agrega tu EV para personalizar la carga.',
+  Vehicle: 'Vehículo',
+  Remove: 'Eliminar',
+  Make: 'Marca',
+  Model: 'Modelo',
+  Year: 'Año',
+  'Save vehicle': 'Guardar vehículo',
+  Cancel: 'Cancelar',
+  '+ Add a vehicle': '+ Agregar un vehículo',
 };
 
 interface I18n {

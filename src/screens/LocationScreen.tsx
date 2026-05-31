@@ -6,11 +6,13 @@ import { Card, EmptyState, SkeletonList, StatusPill, Banner, Button, ErrorState,
 import { ChevronLeft, HeartIcon, PlugIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type ChargerLite, type LocationLite } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 export function LocationScreen() {
   const { id = '' } = useParams();
   const { client } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
   const [saved, setSaved] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
@@ -24,7 +26,7 @@ export function LocationScreen() {
       setSaved(true);
     } catch (e) {
       // Favorites can be disabled per network — show that honestly.
-      setSaveMsg(e instanceof Error && /feature_disabled/.test(e.message) ? 'Saved places aren’t enabled by your provider.' : 'Could not save.');
+      setSaveMsg(e instanceof Error && /feature_disabled/.test(e.message) ? t('Saved places aren’t enabled by your provider.') : t('Could not save.'));
     }
   }
 
@@ -33,7 +35,7 @@ export function LocationScreen() {
   return (
     <div>
       <ScreenHeader
-        title={l?.name ?? 'Charging site'}
+        title={l?.name ?? t('Charging site')}
         subtitle={l ? [l.address, l.city].filter(Boolean).join(', ') : undefined}
         back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={
@@ -54,7 +56,7 @@ export function LocationScreen() {
               variant="outline"
               onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${l.latitude},${l.longitude}`, '_blank', 'noopener')}
             >
-              <PinIcon className="h-5 w-5" /> Get directions
+              <PinIcon className="h-5 w-5" /> {t('Get directions')}
             </Button>
           </div>
         ) : (
@@ -69,13 +71,13 @@ export function LocationScreen() {
 
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[15px] font-bold">Chargers at this site</h2>
+            <h2 className="text-[15px] font-bold">{t('Chargers at this site')}</h2>
             {!chargers.loading && (chargers.data?.length ?? 0) > 0 && (() => {
               const avail = (chargers.data ?? []).filter((c) => /available/i.test(c.status ?? '')).length;
               const total = chargers.data!.length;
               return (
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${avail > 0 ? 'bg-volt/10 text-volt' : 'bg-line text-text-soft'}`}>
-                  {avail} of {total} available
+                  {avail} {t('of')} {total} {t('available')}
                 </span>
               );
             })()}
@@ -83,7 +85,7 @@ export function LocationScreen() {
           {chargers.loading && <SkeletonList rows={3} />}
           {chargers.error && <ErrorState message={chargers.error} onRetry={chargers.reload} />}
           {!chargers.loading && (chargers.data?.length ?? 0) === 0 && (
-            <EmptyState icon={<PlugIcon className="h-9 w-9" />} title="No chargers listed" />
+            <EmptyState icon={<PlugIcon className="h-9 w-9" />} title={t('No chargers listed')} />
           )}
           <div className="space-y-3">
             {chargers.data?.map((c) => (

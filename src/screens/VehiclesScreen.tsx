@@ -5,6 +5,7 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, EmptyState, Field, Spinner, Banner, useAsync } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon } from '../components/icons.tsx';
 import { asArray } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 interface Vehicle {
   id: string;
@@ -17,6 +18,7 @@ interface Vehicle {
 export function VehiclesScreen() {
   const { client } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
   const list = useAsync(async () => asArray<Vehicle>(await client.listVehicles()), []);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -39,8 +41,8 @@ export function VehiclesScreen() {
   return (
     <div>
       <ScreenHeader
-        title="My vehicles"
-        subtitle="Cars linked to your account"
+        title={t('My vehicles')}
+        subtitle={t('Cars linked to your account')}
         back={<button onClick={() => navigate('/account')} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
       />
       <div className="space-y-3 px-5 py-5">
@@ -49,8 +51,8 @@ export function VehiclesScreen() {
         {list.featureDisabled && (
           <EmptyState
             icon={<BoltIcon className="h-9 w-9" />}
-            title="Vehicles aren’t enabled yet"
-            subtitle="Your provider hasn’t turned on vehicle linking (e.g. Smartcar). It can be enabled any time — no app update needed."
+            title={t('Vehicles aren’t enabled yet')}
+            subtitle={t('Your provider hasn’t turned on vehicle linking (e.g. Smartcar). It can be enabled any time — no app update needed.')}
           />
         )}
         {list.error && !list.featureDisabled && <Banner tone="warn">{list.error}</Banner>}
@@ -58,17 +60,17 @@ export function VehiclesScreen() {
         {!list.loading && !list.featureDisabled && (
           <>
             {(list.data?.length ?? 0) === 0 && !adding && (
-              <EmptyState icon={<BoltIcon className="h-9 w-9" />} title="No vehicles yet" subtitle="Add your EV to personalize charging." />
+              <EmptyState icon={<BoltIcon className="h-9 w-9" />} title={t('No vehicles yet')} subtitle={t('Add your EV to personalize charging.')} />
             )}
             {list.data?.map((v) => (
               <Card key={v.id}>
                 <div className="flex items-center gap-3.5">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-volt/10 text-volt"><BoltIcon className="h-5 w-5" /></div>
                   <div className="flex-1">
-                    <p className="text-[14.5px] font-semibold">{[v.make, v.model].filter(Boolean).join(' ') || 'Vehicle'}</p>
+                    <p className="text-[14.5px] font-semibold">{[v.make, v.model].filter(Boolean).join(' ') || t('Vehicle')}</p>
                     <p className="text-[12px] text-text-soft">{[v.year, v.batteryCapacityKwh && `${v.batteryCapacityKwh} kWh`].filter(Boolean).join(' · ')}</p>
                   </div>
-                  <button onClick={() => client.removeVehicle(v.id).then(list.reload)} className="text-[12px] font-medium text-rose">Remove</button>
+                  <button onClick={() => client.removeVehicle(v.id).then(list.reload)} className="text-[12px] font-medium text-rose">{t('Remove')}</button>
                 </div>
               </Card>
             ))}
@@ -77,18 +79,18 @@ export function VehiclesScreen() {
               <Card>
                 <form onSubmit={add} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Make" value={make} onChange={(e) => setMake(e.target.value)} placeholder="Tesla" />
-                    <Field label="Model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model 3" />
+                    <Field label={t('Make')} value={make} onChange={(e) => setMake(e.target.value)} placeholder="Tesla" />
+                    <Field label={t('Model')} value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model 3" />
                   </div>
-                  <Field label="Year" type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" />
+                  <Field label={t('Year')} type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" />
                   <div className="flex gap-2">
-                    <Button type="submit" loading={busy}>Save vehicle</Button>
-                    <Button type="button" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
+                    <Button type="submit" loading={busy}>{t('Save vehicle')}</Button>
+                    <Button type="button" variant="outline" onClick={() => setAdding(false)}>{t('Cancel')}</Button>
                   </div>
                 </form>
               </Card>
             ) : (
-              <Button variant="outline" onClick={() => setAdding(true)}>+ Add a vehicle</Button>
+              <Button variant="outline" onClick={() => setAdding(true)}>{t('+ Add a vehicle')}</Button>
             )}
           </>
         )}

@@ -4,11 +4,13 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, EmptyState, SkeletonList, StatusPill, ErrorState, useAsync, money } from '../components/ui.tsx';
 import { BoltIcon, ReceiptIcon, ChevronRight } from '../components/icons.tsx';
 import { asArray, type ChargingSession } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 /** Charging history — every past + active session, newest first, tap for a receipt. */
 export function ActivityScreen() {
   const { client } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
   const list = useAsync(
     async () => asArray<ChargingSession>(await client.listSessions({ pageSize: 100 })),
     [],
@@ -24,21 +26,21 @@ export function ActivityScreen() {
 
   return (
     <div>
-      <ScreenHeader title="Activity" subtitle="Your charging history & receipts" />
+      <ScreenHeader title={t('Activity')} subtitle={t('Your charging history & receipts')} />
       <div className="space-y-3 px-5 py-5">
         {list.loading && <SkeletonList rows={4} />}
         {list.error && <ErrorState message={list.error} onRetry={list.reload} />}
 
         {!list.loading && !list.error && sessions.length === 0 && (
-          <EmptyState icon={<ReceiptIcon className="h-9 w-9" />} title="No charges yet" subtitle="Start a session and it’ll appear here with a full receipt." />
+          <EmptyState icon={<ReceiptIcon className="h-9 w-9" />} title={t('No charges yet')} subtitle={t('Start a session and it’ll appear here with a full receipt.')} />
         )}
 
         {/* Lifetime summary */}
         {sessions.length > 0 && (
           <div className="grid grid-cols-3 gap-3">
-            <Card className="text-center"><p className="text-[18px] font-bold">{sessions.length}</p><p className="text-[11px] text-text-soft">sessions</p></Card>
-            <Card className="text-center"><p className="text-[18px] font-bold">{totalKwh.toFixed(1)}</p><p className="text-[11px] text-text-soft">kWh total</p></Card>
-            <Card className="text-center"><p className="text-[18px] font-bold">{money(totalSpent, currency)}</p><p className="text-[11px] text-text-soft">spent</p></Card>
+            <Card className="text-center"><p className="text-[18px] font-bold">{sessions.length}</p><p className="text-[11px] text-text-soft">{t('sessions')}</p></Card>
+            <Card className="text-center"><p className="text-[18px] font-bold">{totalKwh.toFixed(1)}</p><p className="text-[11px] text-text-soft">{t('kWh total')}</p></Card>
+            <Card className="text-center"><p className="text-[18px] font-bold">{money(totalSpent, currency)}</p><p className="text-[11px] text-text-soft">{t('spent')}</p></Card>
           </div>
         )}
 
@@ -55,12 +57,12 @@ export function ActivityScreen() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-[14.5px] font-semibold">{s.locationName ?? s.chargerUid ?? 'Charging session'}</p>
+                    <p className="truncate text-[14.5px] font-semibold">{s.locationName ?? s.chargerUid ?? t('Charging session')}</p>
                     <StatusPill status={s.status} />
                   </div>
                   <div className="mt-1 flex items-center gap-2.5 text-[12px] text-text-soft">
                     <span>{kwh.toFixed(1)} kWh</span>
-                    {mins != null && <span>· {mins} min</span>}
+                    {mins != null && <span>· {mins} {t('min')}</span>}
                     <span className="font-semibold text-text">· {money(amount, s.currency)}</span>
                   </div>
                   {when && <p className="mt-0.5 text-[11px] text-text-faint">{when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>}

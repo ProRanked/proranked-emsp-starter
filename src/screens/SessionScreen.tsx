@@ -4,11 +4,13 @@ import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon, PowerIcon } from '../components/icons.tsx';
+import { useT } from '../lib/i18n.tsx';
 
 export function SessionScreen() {
   const { client, activeSession: session, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
   const nav = useLocation();
+  const { t } = useT();
   const state = (nav.state ?? {}) as { sessionId?: string; chargerId?: string; connector?: number };
   // Limit/stop need a charger + connector. Prefer the live session's own values so a
   // RESUMED session (opened on fresh login, with no nav state) is still controllable.
@@ -71,7 +73,7 @@ export function SessionScreen() {
   return (
     <div>
       <ScreenHeader
-        title={active ? 'Charging' : 'Charging controls'}
+        title={active ? t('Charging') : t('Charging controls')}
         back={<button aria-label="Go back" onClick={() => navigate('/')} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
       />
 
@@ -85,25 +87,25 @@ export function SessionScreen() {
               <BoltIcon className="h-7 w-7" />
             </div>
             <p className="text-[40px] font-extrabold leading-none">{kwh.toFixed(1)}</p>
-            <p className="text-[13px] text-text-soft">kWh delivered</p>
+            <p className="text-[13px] text-text-soft">{t('kWh delivered')}</p>
           </div>
         </div>
 
         {!active && (
-          <Banner tone="info">No active session. Start one from a charger — your live energy, power, and cost will appear here.</Banner>
+          <Banner tone="info">{t('No active session. Start one from a charger — your live energy, power, and cost will appear here.')}</Banner>
         )}
 
         {/* Live stats */}
         <div className="grid grid-cols-3 gap-3">
-          <Card className="text-center"><p className="text-[18px] font-bold">{power.toFixed(1)}</p><p className="text-[11px] text-text-soft">kW now</p></Card>
-          <Card className="text-center"><p className="text-[18px] font-bold">{mins}</p><p className="text-[11px] text-text-soft">minutes</p></Card>
-          <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">cost</p></Card>
+          <Card className="text-center"><p className="text-[18px] font-bold">{power.toFixed(1)}</p><p className="text-[11px] text-text-soft">{t('kW now')}</p></Card>
+          <Card className="text-center"><p className="text-[18px] font-bold">{mins}</p><p className="text-[11px] text-text-soft">{t('minutes')}</p></Card>
+          <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">{t('cost')}</p></Card>
         </div>
 
         {/* Charging speed limit */}
         <Card>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[14px] font-semibold">Charging speed</p>
+            <p className="text-[14px] font-semibold">{t('Charging speed')}</p>
             <span className="rounded-full bg-volt/10 px-2.5 py-1 text-[12px] font-bold text-volt">{limit} A</span>
           </div>
           <input
@@ -117,14 +119,14 @@ export function SessionScreen() {
             aria-valuetext={`${limit} amps`}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-volt"
           />
-          <div className="mt-1 flex justify-between text-[11px] text-text-faint"><span>Eco · 6 A</span><span>Max · 32 A</span></div>
+          <div className="mt-1 flex justify-between text-[11px] text-text-faint"><span>{t('Eco · 6 A')}</span><span>{t('Max · 32 A')}</span></div>
           {limitMsg && <p className="mt-2 text-[12px] text-volt">{limitMsg}</p>}
         </Card>
 
         {note && <Banner tone="warn">{note}</Banner>}
 
         <Button variant="danger" onClick={stop} loading={stopping} disabled={!active}>
-          <PowerIcon className="h-5 w-5" /> Stop charging
+          <PowerIcon className="h-5 w-5" /> {t('Stop charging')}
         </Button>
       </div>
     </div>

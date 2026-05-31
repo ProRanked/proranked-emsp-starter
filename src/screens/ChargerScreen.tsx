@@ -5,6 +5,7 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Spinner, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
 import { ChevronLeft, PlugIcon, BoltIcon, ClockIcon } from '../components/icons.tsx';
 import { asArray, type Tariff } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 interface ChargerDetail {
   id: string;
@@ -21,6 +22,7 @@ export function ChargerScreen() {
   const { id = '' } = useParams();
   const { client, activeSession, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
 
   // Does the driver already have a live session on THIS charger? If so, the page
   // resumes it instead of offering a (doomed) second start on a busy connector.
@@ -45,7 +47,7 @@ export function ChargerScreen() {
       refreshActiveSession();
       navigate('/session', { state: { sessionId: res?.id, chargerId: id, connector } });
     } catch (e) {
-      setMsg({ tone: 'warn', text: errText(e) });
+      setMsg({ tone: 'warn', text: errText(e, t) });
     } finally {
       setBusy(null);
     }
@@ -56,9 +58,9 @@ export function ChargerScreen() {
     setMsg(null);
     try {
       await client.reserve({ chargerId: id, connectorNumber: connector, expiryMinutes: 15 });
-      setMsg({ tone: 'volt', text: 'Connector reserved for 15 minutes. Head over and plug in.' });
+      setMsg({ tone: 'volt', text: t('Connector reserved for 15 minutes. Head over and plug in.') });
     } catch (e) {
-      setMsg({ tone: 'warn', text: errText(e) });
+      setMsg({ tone: 'warn', text: errText(e, t) });
     } finally {
       setBusy(null);
     }
@@ -67,7 +69,7 @@ export function ChargerScreen() {
   return (
     <div>
       <ScreenHeader
-        title={c?.name ?? c?.serialNumber ?? 'Charger'}
+        title={c?.name ?? c?.serialNumber ?? t('Charger')}
         subtitle={c?.manufacturer ? `${c.manufacturer}${c.model ? ` · ${c.model}` : ''}` : undefined}
         back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={charger.loading ? undefined : <StatusPill status={c?.status} />}
@@ -81,13 +83,13 @@ export function ChargerScreen() {
             {/* Power + tariff summary */}
             <div className="grid grid-cols-2 gap-3">
               <Card>
-                <div className="flex items-center gap-2 text-text-soft"><BoltIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">Max power</span></div>
+                <div className="flex items-center gap-2 text-text-soft"><BoltIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">{t('Max power')}</span></div>
                 <p className="mt-1 text-[22px] font-bold">{c?.maxPowerKw ?? conns[0]?.maxPowerKw ?? '—'}<span className="ml-1 text-[13px] font-medium text-text-soft">kW</span></p>
               </Card>
               <Card>
-                <div className="flex items-center gap-2 text-text-soft"><ClockIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">Energy rate</span></div>
+                <div className="flex items-center gap-2 text-text-soft"><ClockIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">{t('Energy rate')}</span></div>
                 <p className="mt-1 text-[22px] font-bold">
-                  {tariff?.isFree ? 'Free' : tariff?.energyRate != null ? money(tariff.energyRate, tariff.currency) : '—'}
+                  {tariff?.isFree ? t('Free') : tariff?.energyRate != null ? money(tariff.energyRate, tariff.currency) : '—'}
                   {!tariff?.isFree && tariff?.energyRate != null && <span className="ml-1 text-[13px] font-medium text-text-soft">/kWh</span>}
                 </p>
               </Card>
@@ -95,7 +97,7 @@ export function ChargerScreen() {
 
             {/* Connector picker */}
             <div>
-              <h2 className="mb-2.5 text-[15px] font-bold">Choose a connector</h2>
+              <h2 className="mb-2.5 text-[15px] font-bold">{t('Choose a connector')}</h2>
               <div className="space-y-2.5">
                 {conns.map((cn, i) => {
                   const num = cn.connectorNumber ?? i + 1;
@@ -110,7 +112,7 @@ export function ChargerScreen() {
                         <PlugIcon className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-[14px] font-semibold">Connector {num}</p>
+                        <p className="text-[14px] font-semibold">{t('Connector')} {num}</p>
                         <p className="text-[12px] text-text-soft">{connectorLabel(cn.standard)}{cn.maxPowerKw ? ` · ${cn.maxPowerKw} kW` : ''}</p>
                       </div>
                       <StatusPill status={cn.status} />
@@ -123,16 +125,16 @@ export function ChargerScreen() {
             {/* Pricing breakdown */}
             {tariff && (
               <div>
-                <h2 className="mb-2.5 text-[15px] font-bold">Pricing</h2>
+                <h2 className="mb-2.5 text-[15px] font-bold">{t('Pricing')}</h2>
                 <Card className="space-y-2">
                   {tariff.isFree ? (
-                    <div className="flex items-center justify-between text-[13px]"><span className="text-text-soft">This charger is</span><span className="font-bold text-volt">Free to use</span></div>
+                    <div className="flex items-center justify-between text-[13px]"><span className="text-text-soft">{t('This charger is')}</span><span className="font-bold text-volt">{t('Free to use')}</span></div>
                   ) : (
                     <>
-                      {tariff.energyRate != null && <PriceRow label="Energy" value={`${money(tariff.energyRate, tariff.currency)} / kWh`} />}
-                      {tariff.timeRate != null && tariff.timeRate > 0 && <PriceRow label="Time" value={`${money(tariff.timeRate, tariff.currency)} / min`} />}
-                      {tariff.sessionFee != null && tariff.sessionFee > 0 && <PriceRow label="Session fee" value={money(tariff.sessionFee, tariff.currency)} />}
-                      {tariff.idleRate != null && tariff.idleRate > 0 && <PriceRow label="Idle fee" value={`${money(tariff.idleRate, tariff.currency)} / min`} />}
+                      {tariff.energyRate != null && <PriceRow label={t('Energy')} value={`${money(tariff.energyRate, tariff.currency)} / kWh`} />}
+                      {tariff.timeRate != null && tariff.timeRate > 0 && <PriceRow label={t('Time')} value={`${money(tariff.timeRate, tariff.currency)} / min`} />}
+                      {tariff.sessionFee != null && tariff.sessionFee > 0 && <PriceRow label={t('Session fee')} value={money(tariff.sessionFee, tariff.currency)} />}
+                      {tariff.idleRate != null && tariff.idleRate > 0 && <PriceRow label={t('Idle fee')} value={`${money(tariff.idleRate, tariff.currency)} / min`} />}
                     </>
                   )}
                 </Card>
@@ -145,23 +147,23 @@ export function ChargerScreen() {
             {sessionHere ? (
               <div className="space-y-2.5 pt-1">
                 <Banner tone="volt">
-                  You're charging here now — {(sessionHere.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered.
+                  {t("You're charging here now")} — {(sessionHere.energyDeliveredKwh ?? 0).toFixed(1)} {t('kWh delivered')}.
                 </Banner>
                 <Button onClick={() => navigate('/session', { state: { sessionId: sessionHere.id, chargerId: id, connector: sessionHere.connectorNumber ?? connector } })}>
-                  <BoltIcon className="h-5 w-5" /> View live session
+                  <BoltIcon className="h-5 w-5" /> {t('View live session')}
                 </Button>
               </div>
             ) : (
               <>
                 <div className="space-y-2.5 pt-1">
                   <Button onClick={start} loading={busy === 'start'}>
-                    <BoltIcon className="h-5 w-5" /> Start charging
+                    <BoltIcon className="h-5 w-5" /> {t('Start charging')}
                   </Button>
                   <Button variant="outline" onClick={reserve} loading={busy === 'reserve'}>
-                    <ClockIcon className="h-5 w-5" /> Reserve for 15 min
+                    <ClockIcon className="h-5 w-5" /> {t('Reserve for 15 min')}
                   </Button>
                 </div>
-                <p className="text-center text-[11px] text-text-faint">Billed to your Voltway account when the session ends.</p>
+                <p className="text-center text-[11px] text-text-faint">{t('Billed to your Voltway account when the session ends.')}</p>
               </>
             )}
           </>
@@ -194,14 +196,14 @@ function connectorLabel(standard?: string): string {
   return standard.replace(/_/g, ' ');
 }
 
-function errText(e: unknown): string {
+function errText(e: unknown, t: (s: string) => string): string {
   const m = e instanceof Error ? e.message : String(e);
   // A busy/in-use connector is NOT the same as an offline charger — say so accurately.
   if (/CHARGING|OCCUPIED|PREPARING|FINISHING|in use|SuspendedEV/i.test(m))
-    return 'This connector is in use right now. Try another connector or come back shortly.';
+    return t('This connector is in use right now. Try another connector or come back shortly.');
   if (/UNKNOWN|INOPERATIVE|offline|unreachable|not connected/i.test(m))
-    return 'This charger is offline right now. Try another connector or site.';
-  if (/RESERVED/i.test(m)) return 'This connector is reserved right now. Try another connector.';
+    return t('This charger is offline right now. Try another connector or site.');
+  if (/RESERVED/i.test(m)) return t('This connector is reserved right now. Try another connector.');
   // Otherwise surface the API's own message — it's written for end users.
   return m;
 }

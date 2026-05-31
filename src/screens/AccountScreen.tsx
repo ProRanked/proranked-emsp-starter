@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, Spinner, Toggle, Button, Banner, useAsync } from '../components/ui.tsx';
+import { Card, Spinner, Toggle, Button, Banner, useAsync, money } from '../components/ui.tsx';
 import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
-import type { NotificationPreferences, PaymentConfig } from '../lib/types.ts';
+import { asArray, type NotificationPreferences, type PaymentConfig, type ChargingSession } from '../lib/types.ts';
 
 export function AccountScreen() {
   const { client, driver, logout } = usePhevnix();
@@ -12,7 +12,13 @@ export function AccountScreen() {
 
   const prefs = useAsync(() => client.getNotificationPreferences() as Promise<NotificationPreferences>, []);
   const pay = useAsync(() => client.getPaymentConfig() as Promise<PaymentConfig>, []);
+  const sessions = useAsync(async () => asArray<ChargingSession>(await client.listSessions({ pageSize: 100 })), []);
   const [local, setLocal] = useState<Partial<NotificationPreferences['channels']> & Record<string, boolean>>({});
+
+  const sList = sessions.data ?? [];
+  const totalKwh = sList.reduce((s, x) => s + (x.energyDeliveredKwh ?? 0), 0);
+  const totalSpent = sList.reduce((s, x) => s + (x.total ?? x.cost ?? 0), 0);
+  const statsCurrency = sList.find((s) => s.currency)?.currency ?? 'USD';
 
   const channels = { ...(prefs.data?.channels ?? { push: true, email: true, sms: false }), ...local };
 
@@ -40,6 +46,22 @@ export function AccountScreen() {
             <p className="truncate text-[13px] text-text-soft">{driver?.email}</p>
           </div>
         </div>
+
+        {/* Charge tag (RFID) + lifetime stats */}
+        <Card className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[12px] text-text-soft">Your charge tag (RFID)</p>
+              <p className="font-mono text-[15px] font-bold tracking-[0.15em]">{driver?.tokenUid ?? '—'}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-volt/10 text-volt"><BoltIcon className="h-5 w-5" /></div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 border-t border-line pt-3 text-center">
+            <div><p className="text-[16px] font-bold">{sList.length}</p><p className="text-[11px] text-text-soft">sessions</p></div>
+            <div><p className="text-[16px] font-bold">{totalKwh.toFixed(0)}</p><p className="text-[11px] text-text-soft">kWh</p></div>
+            <div><p className="text-[16px] font-bold">{money(totalSpent, statsCurrency)}</p><p className="text-[11px] text-text-soft">spent</p></div>
+          </div>
+        </Card>
 
         {/* Notifications */}
         <section>

@@ -107,6 +107,17 @@ export function HomeScreen() {
             {t('← Back to San Juan')}
           </button>
         )}
+        <button
+          onClick={() => navigate('/trip')}
+          className="mt-3 flex w-full items-center justify-between rounded-2xl border border-line bg-ink-soft px-4 py-3 text-left"
+        >
+          <span className="flex items-center gap-2.5">
+            <PinIcon className="h-5 w-5 text-volt" />
+            <span className="text-[14px] font-semibold">{t('Plan a trip')}</span>
+            <span className="text-[12px] text-text-soft">{t('chargers along your route')}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 text-text-faint" />
+        </button>
       </div>
 
       {/* Live interactive station map */}

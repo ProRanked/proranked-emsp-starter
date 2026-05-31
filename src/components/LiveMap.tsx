@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { LocationLite } from '../lib/types.ts';
@@ -25,6 +25,7 @@ export function LiveMap({
   height = 320,
   showUser = true,
   interactive = true,
+  route,
 }: {
   locations: LocationLite[];
   origin: { lat: number; lng: number };
@@ -34,6 +35,8 @@ export function LiveMap({
   showUser?: boolean;
   /** Allow pan/zoom. Off for a static detail mini-map. */
   interactive?: boolean;
+  /** Optional driving route [lat,lng][] to draw (trip planner). */
+  route?: [number, number][];
 }) {
   // Valid coords only. Reject null AND the (0,0) "null island" that ungeocoded
   // rows default to, so one bad row can't zoom the whole map out to the ocean.
@@ -60,6 +63,11 @@ export function LiveMap({
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           maxZoom={19}
         />
+
+        {/* Driving route (trip planner) */}
+        {route && route.length > 1 && (
+          <Polyline positions={route} pathOptions={{ color: '#2EE6A6', weight: 4, opacity: 0.75 }} />
+        )}
 
         {/* "You are here" */}
         {showUser && (
@@ -97,7 +105,7 @@ export function LiveMap({
           </Marker>
         ))}
 
-        <FitBounds pins={pins} origin={origin} showUser={showUser} />
+        <FitBounds pins={pins} origin={origin} showUser={showUser} route={route} />
       </MapContainer>
     </div>
   );
@@ -129,11 +137,12 @@ function pinIcon(loc: LocationLite) {
   return L.divIcon({ html, className: '', iconSize: [34, 34], iconAnchor: [17, 32], popupAnchor: [0, -30] });
 }
 
-/** Auto-fit the viewport to all visible pins (plus the user origin when shown). */
-function FitBounds({ pins, origin, showUser }: { pins: LocationLite[]; origin: { lat: number; lng: number }; showUser: boolean }) {
+/** Auto-fit the viewport to all visible pins (plus the user origin when shown, and the route). */
+function FitBounds({ pins, origin, showUser, route }: { pins: LocationLite[]; origin: { lat: number; lng: number }; showUser: boolean; route?: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
     const pts: [number, number][] = pins.map((p) => [p.latitude!, p.longitude!]);
+    if (route && route.length > 1) { pts.push(route[0], route[route.length - 1], route[Math.floor(route.length / 2)]); }
     if (showUser) pts.push([origin.lat, origin.lng]);
     if (pts.length === 1) {
       map.setView(pts[0], 15, { animate: false });
@@ -142,6 +151,6 @@ function FitBounds({ pins, origin, showUser }: { pins: LocationLite[]; origin: {
     } else {
       map.setView([origin.lat, origin.lng], 12, { animate: false });
     }
-  }, [map, pins, origin, showUser]);
+  }, [map, pins, origin, showUser, route]);
   return null;
 }

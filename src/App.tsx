@@ -4,6 +4,7 @@ import { usePhevnix } from './context/PhevnixProvider.tsx';
 import { AppLayout } from './components/AppLayout.tsx';
 import { AuthScreen } from './screens/AuthScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
+import { TripScreen } from './screens/TripScreen.tsx';
 import { LocationScreen } from './screens/LocationScreen.tsx';
 import { ChargerScreen } from './screens/ChargerScreen.tsx';
 import { SessionScreen } from './screens/SessionScreen.tsx';
@@ -35,6 +36,7 @@ export function App() {
         }
       >
         <Route path="/" element={<HomeScreen />} />
+        <Route path="/trip" element={<TripScreen />} />
         <Route path="/location/:id" element={<LocationScreen />} />
         <Route path="/charger/:id" element={<ChargerScreen />} />
         <Route path="/session" element={<SessionScreen />} />

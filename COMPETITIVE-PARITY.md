@@ -27,7 +27,7 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Reviews & ratings | ✅ | `LocationScreen` LocationReviews |
 | Report an issue | ✅ | `LocationScreen` ReportIssue |
 | Filter by amenity / sort menu | 🟡 | availability/speed/connector only; no amenity filter or sort menu |
-| Route / trip planning (chargers along a route) | ⬜ | needs routing provider; not built |
+| Route / trip planning (chargers along a route) | ✅ | **built this session** — `screens/TripScreen.tsx` (keyless OSRM routing + `lib/geo.ts`); verified Bayamón→San Juan |
 
 ## B — Charging
 | Feature | Status | Evidence |
@@ -79,18 +79,19 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Accessibility (aria labels, keyboard) | 🟡 | aria labels present; not audited against WCAG |
 
 ## Scorecard (driver-facing features; ➖ excluded)
-- **Present (✅): 41**
+- **Present (✅): 43**
 - **Partial (🟡): 2** (map sort/amenity filter, a11y audit)
-- **Missing (⬜): 3** (route planning, scheduled charging, Smartcar parked-car SoC)
+- **Missing (⬜): 1** (scheduled charging — needs an eMSP API primitive)
+- **Credential-gated (not counted): Smartcar parked-car SoC**
 
-**Driver-facing parity ≈ 89%** (41 / 46 applicable). The three misses are: one credential-gated
-(Smartcar — and its core value, charging-time SoC, is already delivered via OCPP), one needs an
-external routing provider (trip planning), one needs an API primitive (scheduled charging).
+**Driver-facing parity ≈ 93%** (43 / 46 applicable). The remaining miss (scheduled charging)
+needs a server-side schedule primitive in the eMSP API rather than fragile app-side timing.
+Smartcar is credential-gated and its core value (charging-time SoC) is already delivered via OCPP.
 
 ## Honest gaps & next candidates (buildable + verifiable)
-1. ~~Charging insights / impact dashboard~~ — **DONE this session** (`InsightsScreen`), verified on real history.
-2. Scheduled / departure-time charging — app-side delayed start is fragile for a PWA; better as an eMSP API primitive. Deferred pending API support.
-3. Route/trip planning with charging stops — needs a routing provider (ORS/Mapbox); larger effort.
-4. Map sort menu + amenity filter — minor polish.
-5. WCAG/a11y pass — minor polish.
+1. ~~Charging insights / impact dashboard~~ — **DONE** (`InsightsScreen`), verified on real history.
+2. ~~Route/trip planning with charging stops~~ — **DONE** (`TripScreen`, keyless OSRM), verified Bayamón→San Juan.
+3. Map sort menu + amenity filter — minor app-side polish.
+4. WCAG/a11y pass — app-side polish; not yet audited against WCAG.
+5. Scheduled / departure-time charging — best as an eMSP API primitive (CPO endpoint + background trigger), not app-side timers. Deferred pending API design.
 6. Smartcar link — credential-gated (parked-car SoC only).

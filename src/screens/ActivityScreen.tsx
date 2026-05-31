@@ -1,0 +1,76 @@
+import { useNavigate } from 'react-router-dom';
+import { usePhevnix } from '../context/PhevnixProvider.tsx';
+import { ScreenHeader } from '../components/AppLayout.tsx';
+import { Card, EmptyState, Spinner, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
+import { BoltIcon, ReceiptIcon, ChevronRight } from '../components/icons.tsx';
+import { asArray, type ChargingSession } from '../lib/types.ts';
+
+/** Charging history — every past + active session, newest first, tap for a receipt. */
+export function ActivityScreen() {
+  const { client } = usePhevnix();
+  const navigate = useNavigate();
+  const list = useAsync(
+    async () => asArray<ChargingSession>(await client.listSessions({ pageSize: 100 })),
+    [],
+  );
+
+  const sessions = [...(list.data ?? [])].sort(
+    (a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime(),
+  );
+
+  const totalKwh = sessions.reduce((s, x) => s + (x.energyDeliveredKwh ?? 0), 0);
+  const totalSpent = sessions.reduce((s, x) => s + (x.total ?? x.cost ?? 0), 0);
+  const currency = sessions.find((s) => s.currency)?.currency ?? 'USD';
+
+  return (
+    <div>
+      <ScreenHeader title="Activity" subtitle="Your charging history & receipts" />
+      <div className="space-y-3 px-5 py-5">
+        {list.loading && <div className="flex justify-center py-16 text-volt"><Spinner className="h-7 w-7" /></div>}
+        {list.error && <Banner tone="warn">{list.error}</Banner>}
+
+        {!list.loading && !list.error && sessions.length === 0 && (
+          <EmptyState icon={<ReceiptIcon className="h-9 w-9" />} title="No charges yet" subtitle="Start a session and it’ll appear here with a full receipt." />
+        )}
+
+        {/* Lifetime summary */}
+        {sessions.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="text-center"><p className="text-[18px] font-bold">{sessions.length}</p><p className="text-[11px] text-text-soft">sessions</p></Card>
+            <Card className="text-center"><p className="text-[18px] font-bold">{totalKwh.toFixed(1)}</p><p className="text-[11px] text-text-soft">kWh total</p></Card>
+            <Card className="text-center"><p className="text-[18px] font-bold">{money(totalSpent, currency)}</p><p className="text-[11px] text-text-soft">spent</p></Card>
+          </div>
+        )}
+
+        {sessions.map((s) => {
+          const kwh = s.energyDeliveredKwh ?? 0;
+          const amount = s.total ?? s.cost ?? 0;
+          const when = s.startTime ? new Date(s.startTime) : null;
+          const mins = s.durationSeconds != null ? Math.round(s.durationSeconds / 60) : null;
+          return (
+            <Card key={s.id} onClick={() => s.id && navigate(`/activity/${s.id}`)}>
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-volt/10 text-volt">
+                  <BoltIcon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[14.5px] font-semibold">{s.locationName ?? s.chargerUid ?? 'Charging session'}</p>
+                    <StatusPill status={s.status} />
+                  </div>
+                  <div className="mt-1 flex items-center gap-2.5 text-[12px] text-text-soft">
+                    <span>{kwh.toFixed(1)} kWh</span>
+                    {mins != null && <span>· {mins} min</span>}
+                    <span className="font-semibold text-text">· {money(amount, s.currency)}</span>
+                  </div>
+                  {when && <p className="mt-0.5 text-[11px] text-text-faint">{when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</p>}
+                </div>
+                <ChevronRight className="h-5 w-5 text-text-faint" />
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

@@ -1,9 +1,10 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { MapIcon, ClockIcon, HeartIcon, UserIcon } from './icons.tsx';
+import { MapIcon, ClockIcon, HeartIcon, UserIcon, ReceiptIcon } from './icons.tsx';
 
 const TABS = [
   { to: '/', label: 'Charge', Icon: MapIcon, end: true },
+  { to: '/activity', label: 'Activity', Icon: ReceiptIcon },
   { to: '/reservations', label: 'Reserved', Icon: ClockIcon },
   { to: '/favorites', label: 'Saved', Icon: HeartIcon },
   { to: '/account', label: 'Account', Icon: UserIcon },

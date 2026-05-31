@@ -60,13 +60,33 @@ export interface ChargingSession {
   id?: string;
   status?: string;
   chargerId?: string;
+  chargerUid?: string;
   connectorNumber?: number;
+  locationName?: string;
   startTime?: string;
+  endTime?: string;
   energyDeliveredKwh?: number;
   currentPowerKw?: number;
   durationSeconds?: number;
   cost?: number;
+  total?: number;
   currency?: string;
+}
+
+/** Full session detail (GET /charging/sessions/:id) — itemized for the receipt. */
+export interface ChargingSessionDetail extends ChargingSession {
+  authMethod?: string;
+  maxPowerKw?: number;
+  idleTimeSeconds?: number;
+  stopReason?: string;
+  costs?: {
+    subtotal?: number;
+    taxes?: number;
+    sessionFees?: number;
+    idleFees?: number;
+    total?: number;
+    currency?: string;
+  };
 }
 
 export interface NotificationPreferences {

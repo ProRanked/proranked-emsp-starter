@@ -51,3 +51,6 @@ export const CheckIcon = (p: I) => (
 export const LeafIcon = (p: I) => (
   <svg {...base(p)}><path d="M5 19c0-9 7-14 15-14 0 9-6 14-15 14Z" /><path d="M5 19c3-5 7-7 10-8" /></svg>
 );
+export const ReceiptIcon = (p: I) => (
+  <svg {...base(p)}><path d="M6 2v20l2-1.5L10 22l2-1.5L14 22l2-1.5L18 22V2l-2 1.5L14 2l-2 1.5L10 2 8 3.5 6 2Z" /><path d="M9 8h6M9 12h6" /></svg>
+);

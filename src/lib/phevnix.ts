@@ -264,6 +264,11 @@ export class PhevnixEmspClient {
     return this.request('GET', '/emsp/v1/charging/sessions', { query });
   }
 
+  /** Full session detail incl. itemized cost breakdown — powers the receipt. */
+  getSession(id: string): Promise<unknown> {
+    return this.request('GET', `/emsp/v1/charging/sessions/${id}`);
+  }
+
   // ── Smart charging (driver) ────────────────────────────────────────────
 
   getChargingLimit(chargerId: string, connector = 1, unit: 'A' | 'W' = 'A'): Promise<unknown> {

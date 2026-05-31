@@ -31,6 +31,7 @@ export interface LocationLite {
   longitude?: number;
   distanceKm?: number;
   chargerCount?: number;
+  availableCount?: number;
   images?: { url?: string; thumbnailUrl?: string }[];
 }
 

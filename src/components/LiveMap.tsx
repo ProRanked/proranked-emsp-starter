@@ -71,7 +71,7 @@ export function LiveMap({
         )}
 
         {pins.map((loc) => (
-          <Marker key={loc.id} position={[loc.latitude!, loc.longitude!]} icon={pinIcon(loc.chargerCount)}>
+          <Marker key={loc.id} position={[loc.latitude!, loc.longitude!]} icon={pinIcon(loc)}>
             <Popup>
               <div style={{ minWidth: 160 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{loc.name ?? 'Charging site'}</div>
@@ -80,7 +80,9 @@ export function LiveMap({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontSize: 11, color: '#9aa4b2' }}>
-                    {loc.chargerCount != null ? `${loc.chargerCount} charger${loc.chargerCount === 1 ? '' : 's'}` : ''}
+                    {loc.availableCount != null && loc.chargerCount != null
+                      ? `${loc.availableCount} of ${loc.chargerCount} available`
+                      : loc.chargerCount != null ? `${loc.chargerCount} charger${loc.chargerCount === 1 ? '' : 's'}` : ''}
                     {loc.distanceKm != null ? ` · ${loc.distanceKm.toFixed(1)} km` : ''}
                   </span>
                   <button
@@ -101,17 +103,26 @@ export function LiveMap({
   );
 }
 
-/** Branded teardrop pin with a bolt + optional charger-count badge. */
-function pinIcon(count?: number) {
+/**
+ * Branded teardrop pin coloured by real-time availability:
+ * green = chargers free, amber = all busy/offline, neutral = unknown.
+ * The badge shows the available count (or total when availability is unknown).
+ */
+function pinIcon(loc: LocationLite) {
+  const avail = loc.availableCount;
+  const total = loc.chargerCount;
+  // Color: free → green, none free but some exist → amber, unknown → green.
+  const color = avail != null ? (avail > 0 ? '#2EE6A6' : '#F5A524') : '#2EE6A6';
+  const badgeVal = avail != null ? avail : total;
   const badge =
-    count != null && count > 0
-      ? `<div style="position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;background:#06231a;color:#2EE6A6;border:1.5px solid #2EE6A6;border-radius:9999px;font-size:10px;font-weight:800;line-height:13px;text-align:center">${count}</div>`
+    badgeVal != null
+      ? `<div style="position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;background:#0a0a0f;color:${color};border:1.5px solid ${color};border-radius:9999px;font-size:10px;font-weight:800;line-height:13px;text-align:center">${badgeVal}</div>`
       : '';
   const html = `
     <div style="position:relative;width:34px;height:34px">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">
-        <path d="M12 2c-4.4 0-8 3.4-8 7.6 0 5.4 6.8 11.4 7.4 11.9.3.3.8.3 1.1 0 .7-.5 7.5-6.5 7.5-11.9C20 5.4 16.4 2 12 2z" fill="#2EE6A6"/>
-        <path d="M13 6l-4 6h3l-1 5 4-6h-3l1-5z" fill="#06231a"/>
+        <path d="M12 2c-4.4 0-8 3.4-8 7.6 0 5.4 6.8 11.4 7.4 11.9.3.3.8.3 1.1 0 .7-.5 7.5-6.5 7.5-11.9C20 5.4 16.4 2 12 2z" fill="${color}"/>
+        <path d="M13 6l-4 6h3l-1 5 4-6h-3l1-5z" fill="#0a0a0f"/>
       </svg>
       ${badge}
     </div>`;

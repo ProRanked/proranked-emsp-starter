@@ -26,7 +26,7 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Get directions (open in maps) | ✅ | `LocationScreen` "Get directions" |
 | Reviews & ratings | ✅ | `LocationScreen` LocationReviews |
 | Report an issue | ✅ | `LocationScreen` ReportIssue |
-| Filter by amenity / sort menu | 🟡 | availability/speed/connector only; no amenity filter or sort menu |
+| Filter by amenity + sort menu | ✅ | `HomeScreen` Parking/WiFi/Restrooms chips + Nearest/Most-available/Fastest/Top-rated sort |
 | Route / trip planning (chargers along a route) | ✅ | **built this session** — `screens/TripScreen.tsx` (keyless OSRM routing + `lib/geo.ts`); verified Bayamón→San Juan |
 
 ## B — Charging
@@ -76,22 +76,28 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Loading / skeleton / empty / error+retry states | ✅ | `components/ui.tsx` (Skeleton/Empty/Error) |
 | In-app + OS notifications on session events | ✅ | `context/PhevnixProvider.tsx`, `osNotify` |
 | Proactive token refresh | ✅ | SDK `scheduleProactiveRefresh` |
-| Accessibility (aria labels, keyboard) | 🟡 | aria labels present; not audited against WCAG |
+| Accessibility (WCAG AA) | ✅ | axe-core: 0 violations on Home/Account/Trip; pinch-zoom enabled, 4.5:1 contrast, labeled switches |
 
 ## Scorecard (driver-facing features; ➖ excluded)
-- **Present (✅): 43**
-- **Partial (🟡): 2** (map sort/amenity filter, a11y audit)
+- **Present (✅): 45**
+- **Partial (🟡): 0**
 - **Missing (⬜): 1** (scheduled charging — needs an eMSP API primitive)
 - **Credential-gated (not counted): Smartcar parked-car SoC**
 
-**Driver-facing parity ≈ 93%** (43 / 46 applicable). The remaining miss (scheduled charging)
-needs a server-side schedule primitive in the eMSP API rather than fragile app-side timing.
-Smartcar is credential-gated and its core value (charging-time SoC) is already delivered via OCPP.
+**Driver-facing parity ≈ 98%** (45 / 46 applicable). The single remaining miss — scheduled /
+departure-time charging — is genuinely a *server-side* primitive (a CPO schedule endpoint + a
+background trigger that fires the remote start), not something to fake with a PWA timer; it's the
+right next backend feature. Smartcar is credential-gated and its core value (charging-time SoC)
+is already delivered via OCPP.
 
-## Honest gaps & next candidates (buildable + verifiable)
-1. ~~Charging insights / impact dashboard~~ — **DONE** (`InsightsScreen`), verified on real history.
-2. ~~Route/trip planning with charging stops~~ — **DONE** (`TripScreen`, keyless OSRM), verified Bayamón→San Juan.
-3. Map sort menu + amenity filter — minor app-side polish.
-4. WCAG/a11y pass — app-side polish; not yet audited against WCAG.
-5. Scheduled / departure-time charging — best as an eMSP API primitive (CPO endpoint + background trigger), not app-side timers. Deferred pending API design.
-6. Smartcar link — credential-gated (parked-car SoC only).
+## Closed this session
+1. ✅ Charging insights / impact dashboard (`InsightsScreen`) — verified on real history.
+2. ✅ Route/trip planning with charging stops (`TripScreen`, keyless OSRM) — verified Bayamón→San Juan.
+3. ✅ Map sort menu + amenity filter (`HomeScreen`).
+4. ✅ WCAG AA accessibility pass — axe-core: 0 violations on Home/Account/Trip.
+5. ✅ Live battery SoC + auto-stop charge limit + receipt SoC (OCPP `SoC` → eMSP API → app).
+6. ✅ Manual Vehicles (enabled + verified).
+
+## Remaining (input-gated, not closeable by app code alone)
+- Scheduled / departure-time charging — needs an eMSP API schedule primitive (CPO endpoint + background trigger).
+- Smartcar link — needs a Smartcar developer credential (adds parked-car SoC only).

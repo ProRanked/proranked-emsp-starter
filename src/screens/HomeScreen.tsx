@@ -11,7 +11,7 @@ import { useT } from '../lib/i18n.tsx';
 const ORIGIN = { lat: 18.4248, lng: -66.0758 };
 
 export function HomeScreen() {
-  const { client, driver, activeSession } = usePhevnix();
+  const { client, driver } = usePhevnix();
   const navigate = useNavigate();
   const { t } = useT();
   const [query, setQuery] = useState('');
@@ -108,27 +108,6 @@ export function HomeScreen() {
           </button>
         )}
       </div>
-
-      {/* Active charging session — resume from anywhere in the app */}
-      {activeSession && (
-        <div className="px-5 pt-4">
-          <button
-            onClick={() => navigate('/session')}
-            className="flex w-full items-center gap-3.5 rounded-2xl border border-volt/40 bg-volt/10 p-3.5 text-left"
-          >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-volt/15 text-volt">
-              <BoltIcon className="h-6 w-6 animate-pulse-volt" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-volt">{t('Charging in progress')}</p>
-              <p className="truncate text-[12.5px] text-text-soft">
-                {(activeSession.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered · {t('tap to view & stop')}
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-volt" />
-          </button>
-        </div>
-      )}
 
       {/* Live interactive station map */}
       <div className="px-5 pt-4">

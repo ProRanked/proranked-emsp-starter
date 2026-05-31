@@ -20,6 +20,36 @@ function readSaved(): PersistedSession | null {
 // The publishable eMSP key — safe to embed in a client app (read-only until a driver logs in).
 const API_KEY = (import.meta.env.VITE_EMSP_API_KEY as string | undefined) ?? '';
 
+/**
+ * Fire an OS-level notification for a session event when the driver has granted permission
+ * (requested from the Account screen). Complements the in-app toast — this one shows in the
+ * system notification center, so it's visible even when the app tab isn't focused. No-ops
+ * silently when unsupported or not permitted. (Closed-app delivery is the heavier VAPID/
+ * service-worker-push tier, a follow-up.)
+ */
+function osNotify(title: string, body: string): void {
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/icons/icon-192.png', tag: 'voltway-session', renotify: true } as NotificationOptions);
+    }
+  } catch {
+    /* ignore — notifications are best-effort */
+  }
+}
+
+/** Ask the browser for notification permission. Returns true if granted. */
+export async function requestNotificationPermission(): Promise<boolean> {
+  try {
+    if (typeof Notification === 'undefined') return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const res = await Notification.requestPermission();
+    return res === 'granted';
+  } catch {
+    return false;
+  }
+}
+
 interface PersistedSession {
   accessToken: string;
   refreshToken?: string;
@@ -167,7 +197,9 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
       const path = window.location.pathname;
       if (curId && !prevId && !path.startsWith('/session')) {
         // A session appeared while the driver was elsewhere (e.g. started on another device).
-        notify({ title: t('Charging started'), body: activeSession?.locationName ?? t('Your session is now live') });
+        const body = activeSession?.locationName ?? t('Your session is now live');
+        notify({ title: t('Charging started'), body });
+        osNotify(t('Charging started'), body);
       } else if (!curId && prevId && !path.startsWith('/session') && !path.startsWith('/activity')) {
         // A session finished while the driver was browsing — surface a tappable receipt.
         const kwh = (prev?.energyDeliveredKwh ?? 0).toFixed(1);
@@ -178,6 +210,7 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
           onClick: () => navigate(`/activity/${prevId}`),
           durationMs: 8000,
         });
+        osNotify(t('Charging complete'), `${kwh} kWh · ${cost}`);
       }
     }
     prevSessionRef.current = activeSession;

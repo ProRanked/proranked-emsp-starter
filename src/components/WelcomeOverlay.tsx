@@ -26,7 +26,7 @@ export function WelcomeOverlay() {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/80 px-5 pb-8 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/90 px-5 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-3xl border border-line bg-card p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-volt text-ink"><BoltIcon className="h-6 w-6" /></div>

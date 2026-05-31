@@ -69,7 +69,7 @@ export function ChargerScreen() {
       <ScreenHeader
         title={c?.name ?? c?.serialNumber ?? 'Charger'}
         subtitle={c?.manufacturer ? `${c.manufacturer}${c.model ? ` · ${c.model}` : ''}` : undefined}
-        back={<button onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
+        back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={charger.loading ? undefined : <StatusPill status={c?.status} />}
       />
 

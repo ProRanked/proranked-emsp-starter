@@ -49,7 +49,7 @@ export function ReceiptScreen() {
     <div>
       <ScreenHeader
         title="Receipt"
-        back={<button onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
+        back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={!detail.loading && s ? <StatusPill status={s.status} /> : undefined}
       />
 

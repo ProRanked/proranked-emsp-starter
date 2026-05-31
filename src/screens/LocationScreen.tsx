@@ -35,9 +35,9 @@ export function LocationScreen() {
       <ScreenHeader
         title={l?.name ?? 'Charging site'}
         subtitle={l ? [l.address, l.city].filter(Boolean).join(', ') : undefined}
-        back={<button onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
+        back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={
-          <button onClick={save} className={`rounded-full p-2 ${saved ? 'text-rose' : 'text-text-soft hover:text-text'}`}>
+          <button aria-label={saved ? 'Saved' : 'Save this site'} onClick={save} className={`rounded-full p-2 ${saved ? 'text-rose' : 'text-text-soft hover:text-text'}`}>
             <HeartIcon className="h-6 w-6" {...(saved ? { fill: 'currentColor' } : {})} />
           </button>
         }

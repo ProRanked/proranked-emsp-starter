@@ -72,7 +72,7 @@ export function SessionScreen() {
     <div>
       <ScreenHeader
         title={active ? 'Charging' : 'Charging controls'}
-        back={<button onClick={() => navigate('/')} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
+        back={<button aria-label="Go back" onClick={() => navigate('/')} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
       />
 
       <div className="space-y-6 px-5 py-6">
@@ -113,6 +113,8 @@ export function SessionScreen() {
             step={1}
             value={limit}
             onChange={(e) => changeLimit(Number(e.target.value))}
+            aria-label="Charging speed in amps"
+            aria-valuetext={`${limit} amps`}
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-volt"
           />
           <div className="mt-1 flex justify-between text-[11px] text-text-faint"><span>Eco · 6 A</span><span>Max · 32 A</span></div>

@@ -47,7 +47,7 @@ export function Button({ variant = 'volt', loading, children, className = '', di
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 text-[15px] font-semibold transition disabled:opacity-50 ${styles} ${className}`}
+      className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 text-[15px] font-semibold transition outline-none focus-visible:ring-2 focus-visible:ring-volt focus-visible:ring-offset-2 focus-visible:ring-offset-ink disabled:opacity-50 ${styles} ${className}`}
       {...rest}
     >
       {loading ? <Spinner /> : children}

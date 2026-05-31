@@ -94,6 +94,7 @@ export function HomeScreen() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') geocode(); }}
             placeholder="Search a city or address…"
+            aria-label="Search for a city or address"
             enterKeyHint="search"
             className="h-full w-full bg-transparent text-[15px] outline-none placeholder:text-text-faint"
           />

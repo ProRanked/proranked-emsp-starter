@@ -123,6 +123,9 @@ export interface ChargingSessionDetail extends ChargingSession {
   maxPowerKw?: number;
   idleTimeSeconds?: number;
   stopReason?: string;
+  // phevnix_managed payment lifecycle: authorized → captured (or voided/refunded/capture_failed).
+  // Absent for self_managed networks (the operator bills directly).
+  paymentStatus?: string;
   costs?: {
     subtotal?: number;
     taxes?: number;

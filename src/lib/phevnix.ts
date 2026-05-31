@@ -406,8 +406,11 @@ export class PhevnixEmspClient {
     return this.request('GET', '/emsp/v1/payments/config');
   }
 
-  getPaymentMethods(): Promise<unknown> {
-    return this.request('GET', '/emsp/v1/payments/methods');
+  async getPaymentMethods(): Promise<unknown> {
+    // The endpoint returns { paymentMode, methods: [...] } (after the {data} unwrap). asArray() only
+    // knows .data/.items/bare-array, so expose the card array directly or it renders as "no cards".
+    const r = await this.request<unknown>('GET', '/emsp/v1/payments/methods');
+    return Array.isArray(r) ? r : ((r as { methods?: unknown })?.methods ?? []);
   }
 
   /** Begin saving a card — returns a Stripe SetupIntent client_secret + the publishable key. */

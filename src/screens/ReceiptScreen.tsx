@@ -7,6 +7,19 @@ import { ChevronLeft, BoltIcon, ReceiptIcon } from '../components/icons.tsx';
 import { reportedSoc, type ChargingSessionDetail } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
+/** Driver-friendly label for the phevnix_managed payment lifecycle. Null = nothing to show
+ *  (self_managed networks, or no payment on the session). */
+function paymentLabel(status?: string): string | null {
+  switch (status) {
+    case 'captured': return 'Paid';
+    case 'authorized': return 'Card authorized';
+    case 'refunded': return 'Refunded';
+    case 'voided': return 'No charge';
+    case 'capture_failed': return 'Payment issue';
+    default: return null;
+  }
+}
+
 /** Itemized receipt for one session — the trust artifact every pro charging app has. */
 export function ReceiptScreen() {
   const { id = '' } = useParams();
@@ -91,6 +104,7 @@ export function ReceiptScreen() {
               <Row label={t('Charger')} value={s.chargerUid ?? '—'} />
               {s.connectorNumber != null && <Row label={t('Connector')} value={`#${s.connectorNumber}`} />}
               {s.authMethod && <Row label={t('Authorized via')} value={s.authMethod} />}
+              {paymentLabel(s.paymentStatus) && <Row label={t('Payment')} value={t(paymentLabel(s.paymentStatus)!)} />}
               {s.idleTimeSeconds != null && s.idleTimeSeconds > 0 && <Row label={t('Idle time')} value={`${Math.round(s.idleTimeSeconds / 60)} min`} />}
             </Card>
 

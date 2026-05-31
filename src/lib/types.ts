@@ -32,6 +32,8 @@ export interface LocationLite {
   distanceKm?: number;
   chargerCount?: number;
   availableCount?: number;
+  maxPowerKw?: number;
+  connectorTypes?: string[];
   images?: { url?: string; thumbnailUrl?: string }[];
 }
 

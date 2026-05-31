@@ -20,6 +20,13 @@ export function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [onlyFast, setOnlyFast] = useState(false);
+  const [connFilter, setConnFilter] = useState<string | null>(null);
+
+  // Connector categories present across the loaded sites (for filter chips).
+  const categories = Array.from(
+    new Set(locations.flatMap((l) => (l.connectorTypes ?? []).map(connectorCategory))),
+  ).filter((c) => c !== 'Other').sort();
 
   // Load nearby locations for the current map center; fall back to the full list.
   useEffect(() => {
@@ -66,7 +73,9 @@ export function HomeScreen() {
 
   const filtered = locations
     .filter((l) => (query ? `${l.name ?? ''} ${l.address ?? ''} ${l.city ?? ''}`.toLowerCase().includes(query.toLowerCase()) : true))
-    .filter((l) => (onlyAvailable ? (l.availableCount ?? 0) > 0 : true));
+    .filter((l) => (onlyAvailable ? (l.availableCount ?? 0) > 0 : true))
+    .filter((l) => (onlyFast ? (l.maxPowerKw ?? 0) >= 50 : true))
+    .filter((l) => (connFilter ? (l.connectorTypes ?? []).some((s) => connectorCategory(s) === connFilter) : true));
 
   return (
     <div>
@@ -124,19 +133,12 @@ export function HomeScreen() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 px-5 pt-4">
-        {([['all', 'All'], ['available', 'Available now']] as const).map(([k, label]) => {
-          const active = (k === 'available') === onlyAvailable;
-          return (
-            <button
-              key={k}
-              onClick={() => setOnlyAvailable(k === 'available')}
-              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${active ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
-            >
-              {label}
-            </button>
-          );
-        })}
+      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-4">
+        <Chip label="Available now" active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} />
+        <Chip label="Fast ⚡" active={onlyFast} onClick={() => setOnlyFast((v) => !v)} />
+        {categories.map((c) => (
+          <Chip key={c} label={c} active={connFilter === c} onClick={() => setConnFilter((v) => (v === c ? null : c))} />
+        ))}
       </div>
 
       {/* List */}
@@ -183,4 +185,27 @@ export function HomeScreen() {
       </div>
     </div>
   );
+}
+
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${active ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+/** Group raw OCPI connector standards into driver-friendly filter categories. */
+function connectorCategory(standard: string): string {
+  const s = standard.toUpperCase();
+  if (s.includes('COMBO') || s.includes('CCS')) return 'CCS';
+  if (s.includes('CHADEMO')) return 'CHAdeMO';
+  if (s.includes('T1')) return 'Type 1';
+  if (s.includes('T2') || s.includes('T3')) return 'Type 2';
+  if (s.includes('TESLA')) return 'Tesla';
+  if (s.includes('DOMESTIC')) return 'Wall plug';
+  return 'Other';
 }

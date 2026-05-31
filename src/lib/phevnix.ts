@@ -225,6 +225,16 @@ export class PhevnixEmspClient {
     return this.request('GET', '/emsp/v1/auth/driver/me');
   }
 
+  /** Request a password-reset email. Always succeeds (no account enumeration). */
+  forgotPassword(email: string): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/auth/driver/forgot-password', { body: { email } });
+  }
+
+  /** Complete a password reset with the token from the email. */
+  resetPassword(token: string, newPassword: string): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/auth/driver/reset-password', { body: { token, newPassword } });
+  }
+
   // ── Discovery: locations, chargers, tariffs ────────────────────────────
 
   listLocations(query: { city?: string; q?: string; page?: number; pageSize?: number } = {}): Promise<unknown> {
@@ -277,8 +287,22 @@ export class PhevnixEmspClient {
     return this.request('GET', `/emsp/v1/chargers/${id}`);
   }
 
+  /** Charger summary for a scanned QR code / EVSE id, incl. live status + pricing — the scan-to-charge entry point. */
+  getChargerInfo(identifier: string): Promise<unknown> {
+    return this.request('GET', `/emsp/v1/chargers/${identifier}/info`);
+  }
+
+  /** Live status + details of a single connector. */
+  getConnectorStatus(connectorId: string): Promise<unknown> {
+    return this.request('GET', `/emsp/v1/connectors/${connectorId}/status`);
+  }
+
   listTariffs(query: { activeOnly?: boolean; page?: number; pageSize?: number } = {}): Promise<unknown> {
     return this.request('GET', '/emsp/v1/tariffs', { query });
+  }
+
+  getTariff(id: string): Promise<unknown> {
+    return this.request('GET', `/emsp/v1/tariffs/${id}`);
   }
 
   /** Estimate the cost of a session before you start (energy + time + fees). */
@@ -296,6 +320,10 @@ export class PhevnixEmspClient {
 
   listReservations(query: { status?: string; page?: number; pageSize?: number } = {}): Promise<unknown> {
     return this.request('GET', '/emsp/v1/reservations', { query });
+  }
+
+  getReservation(id: string): Promise<unknown> {
+    return this.request('GET', `/emsp/v1/reservations/${id}`);
   }
 
   cancelReservation(id: string): Promise<unknown> {
@@ -333,7 +361,8 @@ export class PhevnixEmspClient {
     return this.request('GET', '/emsp/v1/charging/sessions', { query });
   }
 
-  /** Full session detail incl. itemized cost breakdown — powers the receipt. */
+  /** Full session detail incl. itemized cost breakdown — this IS the driver's receipt.
+   *  (PDF invoice generation lives behind an operator key — write:transactions — not a driver call.) */
   getSession(id: string): Promise<unknown> {
     return this.request('GET', `/emsp/v1/charging/sessions/${id}`);
   }
@@ -360,6 +389,11 @@ export class PhevnixEmspClient {
 
   triggerMessage(chargerId: string, message: string, connectorNumber?: number): Promise<unknown> {
     return this.request('POST', `/emsp/v1/remote-control/${chargerId}/trigger`, { body: { message, connectorNumber } });
+  }
+
+  /** Reset a charger — Soft (default) recovers the firmware; Hard power-cycles. */
+  resetCharger(chargerId: string, type: 'Soft' | 'Hard' = 'Soft'): Promise<unknown> {
+    return this.request('POST', `/emsp/v1/remote-control/${chargerId}/reset`, { body: { type } });
   }
 
   // ── Notifications (driver) ─────────────────────────────────────────────

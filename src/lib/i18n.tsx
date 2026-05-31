@@ -130,6 +130,8 @@ const ES: Record<string, string> = {
   'Charging site': 'Estación de carga',
   'Chargers at this site': 'Cargadores en este sitio',
   Reviews: 'Reseñas',
+  reviews: 'reseñas',
+  review: 'reseña',
   'No reviews yet — be the first to rate this site.': 'Aún no hay reseñas — sé el primero en calificar este sitio.',
   'Write a review': 'Escribir una reseña',
   'Edit your review': 'Editar tu reseña',

@@ -48,6 +48,15 @@ export function LocationScreen() {
       <div className="space-y-5 px-5 py-5">
         {saveMsg && <Banner tone="warn">{saveMsg}</Banner>}
 
+        {/* Rating summary up top — visible immediately, not buried below the charger list */}
+        {l && l.ratingAverage != null && (l.ratingCount ?? 0) > 0 && (
+          <div className="flex items-center gap-2 text-[13px]">
+            <Stars value={l.ratingAverage} />
+            <b className="text-[14px]">{l.ratingAverage.toFixed(1)}</b>
+            <span className="text-text-soft">· {l.ratingCount} {l.ratingCount === 1 ? t('review') : t('reviews')}</span>
+          </div>
+        )}
+
         {/* Hero — real mini-map + directions when geocoded, else a branded fallback */}
         {l && l.latitude != null && l.longitude != null && !(Math.abs(l.latitude) < 0.01 && Math.abs(l.longitude) < 0.01) ? (
           <div className="space-y-3">

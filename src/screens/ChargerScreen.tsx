@@ -120,6 +120,25 @@ export function ChargerScreen() {
               </div>
             </div>
 
+            {/* Pricing breakdown */}
+            {tariff && (
+              <div>
+                <h2 className="mb-2.5 text-[15px] font-bold">Pricing</h2>
+                <Card className="space-y-2">
+                  {tariff.isFree ? (
+                    <div className="flex items-center justify-between text-[13px]"><span className="text-text-soft">This charger is</span><span className="font-bold text-volt">Free to use</span></div>
+                  ) : (
+                    <>
+                      {tariff.energyRate != null && <PriceRow label="Energy" value={`${money(tariff.energyRate, tariff.currency)} / kWh`} />}
+                      {tariff.timeRate != null && tariff.timeRate > 0 && <PriceRow label="Time" value={`${money(tariff.timeRate, tariff.currency)} / min`} />}
+                      {tariff.sessionFee != null && tariff.sessionFee > 0 && <PriceRow label="Session fee" value={money(tariff.sessionFee, tariff.currency)} />}
+                      {tariff.idleRate != null && tariff.idleRate > 0 && <PriceRow label="Idle fee" value={`${money(tariff.idleRate, tariff.currency)} / min`} />}
+                    </>
+                  )}
+                </Card>
+              </div>
+            )}
+
             {msg && <Banner tone={msg.tone}>{msg.text}</Banner>}
 
             {/* Actions */}
@@ -148,6 +167,15 @@ export function ChargerScreen() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function PriceRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-[13px]">
+      <span className="text-text-soft">{label}</span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }

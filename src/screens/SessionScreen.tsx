@@ -24,6 +24,9 @@ export function SessionScreen() {
   const [note, setNote] = useState<string | null>(null);
   const limitTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [goalKwh, setGoalKwh] = useState<number | null>(null);
+  // Opt-in charge limit: auto-stop when the EV battery reaches a target SoC (like Tesla/ChargePoint).
+  const [socLimit, setSocLimit] = useState<number | null>(null);
+  const autoStopped = useRef(false);
 
   // Live power history for the charging curve. Sampled off the centrally-polled
   // session: append a point whenever delivered energy advances (a fresh poll),
@@ -49,6 +52,20 @@ export function SessionScreen() {
     refreshActiveSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Charge limit: once the live battery SoC reaches the chosen target, stop the session
+  // automatically (exactly once). Opt-in and only armed when the charger reports SoC.
+  const socNow = session?.currentSocPercent;
+  useEffect(() => {
+    if (!session) { autoStopped.current = false; return; }
+    if (socLimit == null || socNow == null || autoStopped.current) return;
+    if (socNow >= socLimit) {
+      autoStopped.current = true;
+      setNote(t('Charge limit reached — stopping.'));
+      void stop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socNow, socLimit, session?.id]);
 
   function changeLimit(a: number) {
     setLimit(a);
@@ -127,15 +144,45 @@ export function SessionScreen() {
               </p>
               <p className="text-[26px] font-extrabold leading-none text-volt">{Math.round(soc)}<span className="text-[15px]">%</span></p>
             </div>
-            <div className="h-3.5 w-full overflow-hidden rounded-full bg-card-2">
+            <div className="relative h-3.5 w-full overflow-hidden rounded-full bg-card-2">
               <div
                 className="h-full rounded-full bg-volt transition-[width] duration-700"
                 style={{ width: `${Math.max(3, Math.min(100, soc))}%` }}
               />
+              {socLimit != null && (
+                <span
+                  className="absolute top-[-3px] h-[20px] w-[2px] bg-amber"
+                  style={{ left: `${socLimit}%` }}
+                  aria-hidden
+                />
+              )}
             </div>
             <p className="mt-1.5 text-[11px] text-text-soft">
-              {soc >= 80 ? t('Nearly full — charging may slow to protect the battery.') : t('Reported live by the charger.')}
+              {socLimit != null
+                ? `${t('Auto-stops at')} ${socLimit}%`
+                : soc >= 80
+                  ? t('Nearly full — charging may slow to protect the battery.')
+                  : t('Reported live by the charger.')}
             </p>
+
+            {/* Charge limit — auto-stop at a target % (Tesla/ChargePoint style) */}
+            <div className="mt-3 border-t border-line pt-3">
+              <p className="mb-2 text-[12px] font-medium text-text-soft">{t('Charge limit')}</p>
+              <div className="flex gap-2">
+                {([null, 70, 80, 90, 100] as const).map((opt) => {
+                  const selected = socLimit === opt;
+                  return (
+                    <button
+                      key={opt ?? 'off'}
+                      onClick={() => { autoStopped.current = false; setSocLimit(opt); }}
+                      className={`flex-1 rounded-xl py-2 text-[12.5px] font-semibold transition ${selected ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+                    >
+                      {opt == null ? t('No limit') : `${opt}%`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </Card>
         )}
 

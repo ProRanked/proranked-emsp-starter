@@ -88,6 +88,10 @@ const ES: Record<string, string> = {
   'Nearly full — charging may slow to protect the battery.':
     'Casi llena — la carga puede ralentizarse para proteger la batería.',
   'Reported live by the charger.': 'Reportado en vivo por el cargador.',
+  'Charge limit': 'Límite de carga',
+  'Auto-stops at': 'Se detiene automáticamente al',
+  'No limit': 'Sin límite',
+  'Charge limit reached — stopping.': 'Límite de carga alcanzado — deteniendo.',
   minutes: 'minutos',
   min: 'min',
   cost: 'costo',

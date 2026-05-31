@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix, requestNotificationPermission } from '../context/PhevnixProvider.tsx';
 import { subscribeToPush } from '../lib/push.ts';
+import { PaymentMethods } from '../components/PaymentMethods.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, Spinner, Toggle, Button, Banner, useAsync, money } from '../components/ui.tsx';
+import { Card, Spinner, Toggle, Banner, useAsync, money } from '../components/ui.tsx';
 import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
 import { asArray, type NotificationPreferences, type PaymentConfig, type ChargingSession } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
@@ -111,13 +112,9 @@ export function AccountScreen() {
             {pay.loading ? (
               <div className="flex justify-center py-4 text-volt"><Spinner /></div>
             ) : pay.data?.paymentMode === 'phevnix_managed' ? (
-              <div className="flex items-start gap-3">
-                <CardIcon className="mt-0.5 h-5 w-5 text-volt" />
-                <div>
-                  <p className="text-[14px] font-semibold">{t('Managed by Voltway')}</p>
-                  <p className="mt-0.5 text-[12.5px] text-text-soft">{t('Add a card to charge instantly. Receipts arrive after each session.')}</p>
-                  <Button variant="outline" className="mt-3 h-10 w-auto px-4">{t('Add payment method')}</Button>
-                </div>
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-[14px] font-semibold"><CardIcon className="h-5 w-5 text-volt" /> {t('Managed by Voltway')}</p>
+                <PaymentMethods />
               </div>
             ) : (
               <div className="flex items-start gap-3">

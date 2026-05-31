@@ -410,6 +410,19 @@ export class PhevnixEmspClient {
     return this.request('GET', '/emsp/v1/payments/methods');
   }
 
+  /** Begin saving a card — returns a Stripe SetupIntent client_secret + the publishable key. */
+  createSetupIntent(): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/payments/setup-intent', {});
+  }
+
+  setDefaultPaymentMethod(id: string): Promise<unknown> {
+    return this.request('POST', `/emsp/v1/payments/methods/${id}/default`);
+  }
+
+  removePaymentMethod(id: string): Promise<unknown> {
+    return this.request('DELETE', `/emsp/v1/payments/methods/${id}`);
+  }
+
   checkout(input: { sessionId: string; amount?: number; currency?: string }): Promise<unknown> {
     return this.request('POST', '/emsp/v1/payments/checkout', { body: input });
   }

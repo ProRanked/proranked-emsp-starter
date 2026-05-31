@@ -120,7 +120,9 @@ export function LocationScreen() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[15px] font-bold">{t('Chargers at this site')}</h2>
             {!chargers.loading && (chargers.data?.length ?? 0) > 0 && (() => {
-              const avail = (chargers.data ?? []).filter((c) => /available/i.test(c.status ?? '')).length;
+              // Count a charger as available only if it's AVAILABLE *and* online (a dropped
+              // WebSocket leaves a stale AVAILABLE status that can't actually serve a driver).
+              const avail = (chargers.data ?? []).filter((c) => /available/i.test(c.status ?? '') && (c.isOnline ?? true)).length;
               const total = chargers.data!.length;
               return (
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${avail > 0 ? 'bg-volt/10 text-volt' : 'bg-line text-text-soft'}`}>
@@ -145,7 +147,7 @@ export function LocationScreen() {
                     <p className="truncate text-[14.5px] font-semibold">{c.name ?? c.serialNumber ?? 'Charger'}</p>
                     <p className="text-[12px] text-text-soft">{c.connectorCount ?? 0} connectors{c.maxPowerKw ? ` · up to ${c.maxPowerKw} kW` : ''}</p>
                   </div>
-                  <StatusPill status={c.status} />
+                  <StatusPill status={(c.isOnline ?? true) ? c.status : 'Offline'} />
                   <ChevronRight className="h-5 w-5 text-text-faint" />
                 </div>
               </Card>

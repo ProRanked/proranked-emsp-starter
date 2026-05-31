@@ -205,6 +205,8 @@ const ES: Record<string, string> = {
   'No charging stops within reach of this route.': 'No hay paradas de carga cerca de esta ruta.',
   'Stops on your route': 'Paradas en tu ruta',
   'on route': 'en ruta',
+  'This charger is offline right now — it can’t start a session. Try another charger or site.':
+    'Este cargador está desconectado ahora — no puede iniciar una sesión. Prueba otro cargador o sitio.',
   'Schedule for later': 'Programar para después',
   'Schedule charge': 'Programar carga',
   'Start time': 'Hora de inicio',

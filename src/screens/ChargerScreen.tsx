@@ -16,6 +16,8 @@ interface ChargerDetail {
   model?: string;
   maxPowerKw?: number;
   lastHeartbeat?: string;
+  /** True only if the charger is actually reachable now (recent heartbeat). See CPO ChargerOnline. */
+  isOnline?: boolean;
   connectors?: { id?: string; connectorNumber?: number; status?: string; standard?: string; maxPowerKw?: number }[];
 }
 
@@ -40,6 +42,11 @@ export function ChargerScreen() {
   const c = charger.data;
   const conns = c?.connectors?.length ? c.connectors : [{ connectorNumber: 1, status: c?.status }];
   const tariff = tariffs.data?.[0];
+  // A charger's persisted status reads "AVAILABLE" even after its WebSocket drops, so trust the
+  // API's connectivity flag (recent heartbeat). When offline, nothing is actually usable: show
+  // "Offline" instead of the stale status and disable the start/reserve/schedule actions.
+  const online = c?.isOnline ?? (c?.lastHeartbeat ? !!seenInfo(c.lastHeartbeat, lang)?.online : true);
+  const displayStatus = (s?: string) => (online ? s : 'Offline');
 
   async function start() {
     setBusy('start');
@@ -100,7 +107,7 @@ export function ChargerScreen() {
         title={c?.name ?? c?.serialNumber ?? t('Charger')}
         subtitle={c?.manufacturer ? `${c.manufacturer}${c.model ? ` · ${c.model}` : ''}` : undefined}
         back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
-        action={charger.loading ? undefined : <StatusPill status={c?.status} />}
+        action={charger.loading ? undefined : <StatusPill status={displayStatus(c?.status)} />}
       />
 
       <div className="space-y-5 px-5 py-5">
@@ -157,7 +164,7 @@ export function ChargerScreen() {
                         <p className="text-[14px] font-semibold">{t('Connector')} {num}</p>
                         <p className="text-[12px] text-text-soft">{connectorLabel(cn.standard)}{cn.maxPowerKw ? ` · ${cn.maxPowerKw} kW` : ''}</p>
                       </div>
-                      <StatusPill status={cn.status} />
+                      <StatusPill status={displayStatus(cn.status)} />
                     </button>
                   );
                 })}
@@ -197,11 +204,14 @@ export function ChargerScreen() {
               </div>
             ) : (
               <>
+                {!online && (
+                  <Banner tone="warn">{t('This charger is offline right now — it can’t start a session. Try another charger or site.')}</Banner>
+                )}
                 <div className="space-y-2.5 pt-1">
-                  <Button onClick={start} loading={busy === 'start'}>
+                  <Button onClick={start} loading={busy === 'start'} disabled={!online}>
                     <BoltIcon className="h-5 w-5" /> {t('Start charging')}
                   </Button>
-                  <Button variant="outline" onClick={reserve} loading={busy === 'reserve'}>
+                  <Button variant="outline" onClick={reserve} loading={busy === 'reserve'} disabled={!online}>
                     <ClockIcon className="h-5 w-5" /> {t('Reserve for 15 min')}
                   </Button>
 

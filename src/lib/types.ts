@@ -16,6 +16,9 @@ export interface ChargerLite {
   uid?: string;
   name?: string;
   status?: string;
+  /** Actually reachable now (recent heartbeat). Status alone can read AVAILABLE while offline. */
+  isOnline?: boolean;
+  lastHeartbeat?: string;
   connectorCount?: number;
   maxPowerKw?: number;
 }

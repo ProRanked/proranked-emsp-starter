@@ -98,6 +98,20 @@ export function SkeletonList({ rows = 4 }: { rows?: number }) {
   );
 }
 
+/** A failed-load state with a retry affordance — pairs with useAsync().reload. */
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-3xl border border-line bg-card px-5 py-8 text-center">
+      <p className="text-[13px] text-text-soft">{message}</p>
+      {onRetry && (
+        <button onClick={onRetry} className="rounded-full border border-line px-5 py-2 text-[13px] font-semibold text-volt transition hover:border-volt-dim">
+          Try again
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Text field ────────────────────────────────────────────────────────────
 export function Field({ label, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, EmptyState, SkeletonList, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, StatusPill, ErrorState, useAsync, money } from '../components/ui.tsx';
 import { BoltIcon, ReceiptIcon, ChevronRight } from '../components/icons.tsx';
 import { asArray, type ChargingSession } from '../lib/types.ts';
 
@@ -27,7 +27,7 @@ export function ActivityScreen() {
       <ScreenHeader title="Activity" subtitle="Your charging history & receipts" />
       <div className="space-y-3 px-5 py-5">
         {list.loading && <SkeletonList rows={4} />}
-        {list.error && <Banner tone="warn">{list.error}</Banner>}
+        {list.error && <ErrorState message={list.error} onRetry={list.reload} />}
 
         {!list.loading && !list.error && sessions.length === 0 && (
           <EmptyState icon={<ReceiptIcon className="h-9 w-9" />} title="No charges yet" subtitle="Start a session and it’ll appear here with a full receipt." />

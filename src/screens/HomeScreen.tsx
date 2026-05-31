@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
-import { Card, EmptyState, SkeletonList, Spinner, Banner } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, Spinner, ErrorState } from '../components/ui.tsx';
 import { BoltIcon, SearchIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type LocationLite } from '../lib/types.ts';
@@ -18,11 +18,13 @@ export function HomeScreen() {
   const [locations, setLocations] = useState<LocationLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Load nearby locations for the current map center; fall back to the full list.
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setError(null);
     (async () => {
       try {
         let rows = asArray<LocationLite>(await client.searchLocations(center.lat, center.lng, 250, 50));
@@ -37,7 +39,7 @@ export function HomeScreen() {
     return () => {
       alive = false;
     };
-  }, [client, center]);
+  }, [client, center, reloadKey]);
 
   // Geocode a typed place/address (OpenStreetMap Nominatim) and recenter the map.
   async function geocode() {
@@ -128,7 +130,7 @@ export function HomeScreen() {
         </div>
 
         {loading && <SkeletonList rows={3} />}
-        {error && !loading && <Banner tone="warn">Couldn’t load locations: {error}</Banner>}
+        {error && !loading && <ErrorState message={`Couldn’t load locations: ${error}`} onRetry={() => setReloadKey((k) => k + 1)} />}
         {!loading && !error && filtered.length === 0 && (
           <EmptyState icon={<PinIcon className="h-9 w-9" />} title="No charging sites yet" subtitle="This network hasn’t published any public locations." />
         )}

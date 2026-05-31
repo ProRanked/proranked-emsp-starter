@@ -66,6 +66,11 @@ body {
 }
 .animate-pulse-volt { animation: pulse-volt 1.6s ease-in-out infinite; }
 
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes energy-flow {
   0% { background-position: 0 0; }
   100% { background-position: 40px 0; }

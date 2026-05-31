@@ -65,6 +65,10 @@ const ES: Record<string, string> = {
   // Live session
   Charging: 'Cargando',
   'Charging controls': 'Controles de carga',
+  'Charging started': 'Carga iniciada',
+  'Your session is now live': 'Tu sesión está activa',
+  'Charging complete': 'Carga completada',
+  'Tap for receipt': 'Toca para ver el recibo',
   'kWh delivered': 'kWh entregados',
   'No active session. Start one from a charger — your live energy, power, and cost will appear here.':
     'No hay sesión activa. Inicia una desde un cargador: verás tu energía, potencia y costo en vivo aquí.',

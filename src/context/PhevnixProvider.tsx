@@ -1,6 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PhevnixEmspClient, type DriverSession } from '../lib/phevnix.ts';
 import { asArray, type ChargingSession, type Driver } from '../lib/types.ts';
+import { useToast } from '../components/Toast.tsx';
+import { useT } from '../lib/i18n.tsx';
+import { money } from '../components/ui.tsx';
 
 const STORAGE_KEY = 'voltway.session';
 
@@ -44,6 +48,9 @@ const PhevnixContext = createContext<PhevnixContextValue | null>(null);
 
 export function PhevnixProvider({ children }: { children: ReactNode }) {
   const [driver, setDriver] = useState<Driver | null>(() => readSaved()?.driver ?? null);
+  const { notify } = useToast();
+  const { t } = useT();
+  const navigate = useNavigate();
 
   // Calls go same-origin (window.location.origin) and Vite proxies /emsp → the gateway.
   // Rehydrate any saved session synchronously so a page reload doesn't bounce to /login
@@ -119,6 +126,62 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
       clearInterval(iv);
     };
   }, [driver, client]);
+
+  // The driver's push preference, fetched once per login. In-app session toasts honor it,
+  // so the Account "Push notifications" toggle finally controls real behavior.
+  const pushEnabledRef = useRef(true);
+  useEffect(() => {
+    if (!driver) {
+      pushEnabledRef.current = true;
+      return;
+    }
+    let alive = true;
+    client
+      .getNotificationPreferences()
+      .then((p) => {
+        if (alive) pushEnabledRef.current = (p as { channels?: { push?: boolean } })?.channels?.push ?? true;
+      })
+      .catch(() => {
+        /* feature may be disabled — default to notifying */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [driver, client]);
+
+  // Fire in-app notifications on session start/finish. We compare the polled session by
+  // id so same-session updates don't notify; `undefined` baseline avoids a spurious
+  // "started" for a session that was already live when the app loaded.
+  const prevSessionRef = useRef<ChargingSession | null | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevSessionRef.current;
+    // No baseline yet, or the driver is signing out (session nulled by logout, not by the
+    // car finishing) — just track state, never notify.
+    if (prev === undefined || !driver) {
+      prevSessionRef.current = activeSession;
+      return;
+    }
+    const prevId = prev?.id ?? null;
+    const curId = activeSession?.id ?? null;
+    if (prevId !== curId && pushEnabledRef.current) {
+      const path = window.location.pathname;
+      if (curId && !prevId && !path.startsWith('/session')) {
+        // A session appeared while the driver was elsewhere (e.g. started on another device).
+        notify({ title: t('Charging started'), body: activeSession?.locationName ?? t('Your session is now live') });
+      } else if (!curId && prevId && !path.startsWith('/session') && !path.startsWith('/activity')) {
+        // A session finished while the driver was browsing — surface a tappable receipt.
+        const kwh = (prev?.energyDeliveredKwh ?? 0).toFixed(1);
+        const cost = money(prev?.total ?? prev?.cost ?? 0, prev?.currency);
+        notify({
+          title: t('Charging complete'),
+          body: `${kwh} kWh · ${cost} · ${t('Tap for receipt')}`,
+          onClick: () => navigate(`/activity/${prevId}`),
+          durationMs: 8000,
+        });
+      }
+    }
+    prevSessionRef.current = activeSession;
+  }, [activeSession, driver, notify, t, navigate]);
 
   function persist(session: DriverSession) {
     const driverInfo: Driver = { ...session.driver, tokenUid: session.driver?.tokenUid ?? client.tokenUid };

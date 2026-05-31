@@ -124,7 +124,9 @@ export function AccountScreen() {
                 <LeafIcon className="mt-0.5 h-5 w-5 text-volt" />
                 <div>
                   <p className="text-[14px] font-semibold">{t('Billed directly by your provider')}</p>
-                  <p className="mt-0.5 text-[12.5px] text-text-soft">{pay.data?.note ?? t('This network handles payment on its own — nothing to set up here.')}</p>
+                  {/* The API's `note` is developer-facing ("handle payment in your own app") —
+                      never show it to drivers; use driver-friendly copy. */}
+                  <p className="mt-0.5 text-[12.5px] text-text-soft">{t('This network handles payment on its own — nothing to set up here.')}</p>
                 </div>
               </div>
             )}

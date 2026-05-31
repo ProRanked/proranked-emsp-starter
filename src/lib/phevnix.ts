@@ -314,6 +314,21 @@ export class PhevnixEmspClient {
     return this.request('POST', '/emsp/v1/charging/stop', { body: { sessionId } });
   }
 
+  /** Schedule a charge to auto-start at a future time (departure charging). */
+  scheduleCharge(input: { chargerId: string; connectorNumber?: number; idTag?: string; scheduledTime: string }): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/charging/schedule', {
+      body: { connectorNumber: 1, idTag: this.requireIdTag(input.idTag), ...input },
+    });
+  }
+
+  listScheduledCharges(): Promise<unknown> {
+    return this.request('GET', '/emsp/v1/charging/schedules');
+  }
+
+  cancelScheduledCharge(id: string): Promise<unknown> {
+    return this.request('DELETE', `/emsp/v1/charging/schedule/${id}`);
+  }
+
   listSessions(query: { status?: string; page?: number; pageSize?: number } = {}): Promise<unknown> {
     return this.request('GET', '/emsp/v1/charging/sessions', { query });
   }

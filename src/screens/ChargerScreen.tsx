@@ -29,8 +29,10 @@ export function ChargerScreen() {
   // resumes it instead of offering a (doomed) second start on a busy connector.
   const sessionHere = activeSession && activeSession.chargerId === id ? activeSession : null;
   const [connector, setConnector] = useState(1);
-  const [busy, setBusy] = useState<'start' | 'reserve' | null>(null);
+  const [busy, setBusy] = useState<'start' | 'reserve' | 'schedule' | null>(null);
   const [msg, setMsg] = useState<{ tone: 'volt' | 'warn'; text: string } | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const [schedAt, setSchedAt] = useState('');
 
   const charger = useAsync(() => client.getCharger(id) as Promise<ChargerDetail>, [id]);
   const tariffs = useAsync(async () => asArray<Tariff>(await client.listTariffs({ activeOnly: true, pageSize: 1 })), []);
@@ -65,6 +67,30 @@ export function ChargerScreen() {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function schedule() {
+    if (!schedAt) return;
+    setBusy('schedule');
+    setMsg(null);
+    try {
+      const when = new Date(schedAt);
+      await client.scheduleCharge({ chargerId: id, connectorNumber: connector, scheduledTime: when.toISOString() });
+      setScheduling(false);
+      setSchedAt('');
+      setMsg({ tone: 'volt', text: `${t('Scheduled to start')} ${when.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.` });
+    } catch (e) {
+      setMsg({ tone: 'warn', text: errText(e, t) });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Default the picker to ~1 hour out, formatted for <input type="datetime-local">.
+  function defaultSchedAt() {
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   return (
@@ -177,6 +203,28 @@ export function ChargerScreen() {
                   <Button variant="outline" onClick={reserve} loading={busy === 'reserve'}>
                     <ClockIcon className="h-5 w-5" /> {t('Reserve for 15 min')}
                   </Button>
+
+                  {scheduling ? (
+                    <Card className="space-y-2.5">
+                      <p className="flex items-center gap-2 text-[13px] font-semibold"><ClockIcon className="h-4 w-4 text-volt" /> {t('Schedule for later')}</p>
+                      <input
+                        type="datetime-local"
+                        value={schedAt || defaultSchedAt()}
+                        min={defaultSchedAt()}
+                        onChange={(e) => setSchedAt(e.target.value)}
+                        aria-label={t('Start time')}
+                        className="h-11 w-full rounded-xl border border-line bg-ink-soft px-3 text-[14px] outline-none"
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={schedule} loading={busy === 'schedule'}>{t('Schedule charge')}</Button>
+                        <Button variant="outline" onClick={() => setScheduling(false)}>{t('Cancel')}</Button>
+                      </div>
+                    </Card>
+                  ) : (
+                    <button onClick={() => { setScheduling(true); setSchedAt(defaultSchedAt()); }} className="w-full py-1 text-center text-[13px] font-medium text-volt">
+                      {t('Schedule for later')}
+                    </button>
+                  )}
                 </div>
                 <p className="text-center text-[11px] text-text-faint">{t('Billed to your Voltway account when the session ends.')}</p>
               </>

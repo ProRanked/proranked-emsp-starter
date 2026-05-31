@@ -24,6 +24,8 @@ export function HomeScreen() {
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [onlyFast, setOnlyFast] = useState(false);
   const [connFilter, setConnFilter] = useState<string | null>(null);
+  const [amenity, setAmenity] = useState<'parking' | 'wifi' | 'restrooms' | null>(null);
+  const [sortBy, setSortBy] = useState<'distance' | 'available' | 'power' | 'rating'>('distance');
 
   // Connector categories present across the loaded sites (for filter chips).
   const categories = Array.from(
@@ -77,7 +79,14 @@ export function HomeScreen() {
     .filter((l) => (query ? `${l.name ?? ''} ${l.address ?? ''} ${l.city ?? ''}`.toLowerCase().includes(query.toLowerCase()) : true))
     .filter((l) => (onlyAvailable ? (l.availableCount ?? 0) > 0 : true))
     .filter((l) => (onlyFast ? (l.maxPowerKw ?? 0) >= 50 : true))
-    .filter((l) => (connFilter ? (l.connectorTypes ?? []).some((s) => connectorCategory(s) === connFilter) : true));
+    .filter((l) => (connFilter ? (l.connectorTypes ?? []).some((s) => connectorCategory(s) === connFilter) : true))
+    .filter((l) => (amenity === 'parking' ? l.hasParking : amenity === 'wifi' ? l.hasWifi : amenity === 'restrooms' ? l.hasRestrooms : true))
+    .sort((a, b) => {
+      if (sortBy === 'available') return (b.availableCount ?? 0) - (a.availableCount ?? 0);
+      if (sortBy === 'power') return (b.maxPowerKw ?? 0) - (a.maxPowerKw ?? 0);
+      if (sortBy === 'rating') return (b.ratingAverage ?? 0) - (a.ratingAverage ?? 0);
+      return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity); // default: nearest
+    });
 
   return (
     <div>
@@ -129,6 +138,9 @@ export function HomeScreen() {
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-4">
         <Chip label={t('Available now')} active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} />
         <Chip label={t('Fast ⚡')} active={onlyFast} onClick={() => setOnlyFast((v) => !v)} />
+        <Chip label={t('Parking')} active={amenity === 'parking'} onClick={() => setAmenity((v) => (v === 'parking' ? null : 'parking'))} />
+        <Chip label={t('WiFi')} active={amenity === 'wifi'} onClick={() => setAmenity((v) => (v === 'wifi' ? null : 'wifi'))} />
+        <Chip label={t('Restrooms')} active={amenity === 'restrooms'} onClick={() => setAmenity((v) => (v === 'restrooms' ? null : 'restrooms'))} />
         {categories.map((c) => (
           <Chip key={c} label={c} active={connFilter === c} onClick={() => setConnFilter((v) => (v === c ? null : c))} />
         ))}
@@ -136,9 +148,23 @@ export function HomeScreen() {
 
       {/* List */}
       <div className="px-5 pb-6 pt-5">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="text-[15px] font-bold">{t('Chargers near you')}</h2>
-          <span className="text-[12px] text-text-soft">{filtered.length} {filtered.length === 1 ? 'site' : 'sites'}</span>
+          <div className="flex items-center gap-2">
+            <label className="sr-only" htmlFor="sortby">{t('Sort by')}</label>
+            <select
+              id="sortby"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="rounded-lg border border-line bg-ink-soft px-2 py-1 text-[12px] text-text-soft outline-none"
+            >
+              <option value="distance">{t('Nearest')}</option>
+              <option value="available">{t('Most available')}</option>
+              <option value="power">{t('Fastest')}</option>
+              <option value="rating">{t('Top rated')}</option>
+            </select>
+            <span className="whitespace-nowrap text-[12px] text-text-soft">{filtered.length} {filtered.length === 1 ? t('site') : t('sites')}</span>
+          </div>
         </div>
 
         {loading && <SkeletonList rows={3} />}

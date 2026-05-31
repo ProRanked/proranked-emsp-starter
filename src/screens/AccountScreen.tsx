@@ -95,7 +95,7 @@ export function AccountScreen() {
                     <p className="text-[14px] font-medium">{t(title)}</p>
                     <p className="text-[12px] text-text-soft">{t(sub)}</p>
                   </div>
-                  <Toggle checked={!!channels[key]} onChange={(v) => toggle(key, v)} />
+                  <Toggle checked={!!channels[key]} onChange={(v) => toggle(key, v)} label={t(title)} />
                 </div>
               ))
             )}

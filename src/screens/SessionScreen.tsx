@@ -50,10 +50,12 @@ export function SessionScreen() {
     }
     setStopping(true);
     try {
-      await client.stopCharging(session.id);
+      const stoppedId = session.id;
+      await client.stopCharging(stoppedId);
       sessionStorage.removeItem('voltway.activeCharger');
       refreshActiveSession();
-      navigate('/', { replace: true });
+      // Land on the itemized receipt for the session that just ended.
+      navigate(`/activity/${stoppedId}`, { replace: true });
     } catch (e) {
       setNote(e instanceof Error ? e.message : 'Could not stop session');
     } finally {

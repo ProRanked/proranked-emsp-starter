@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
-import { Card, EmptyState, SkeletonList, Banner } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, Spinner, Banner } from '../components/ui.tsx';
 import { BoltIcon, SearchIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type LocationLite } from '../lib/types.ts';
@@ -13,16 +13,19 @@ export function HomeScreen() {
   const { client, driver, activeSession } = usePhevnix();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [center, setCenter] = useState(ORIGIN);
+  const [searching, setSearching] = useState(false);
   const [locations, setLocations] = useState<LocationLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load nearby locations; fall back to the full list if geo-search is empty.
+  // Load nearby locations for the current map center; fall back to the full list.
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     (async () => {
       try {
-        let rows = asArray<LocationLite>(await client.searchLocations(ORIGIN.lat, ORIGIN.lng, 250, 50));
+        let rows = asArray<LocationLite>(await client.searchLocations(center.lat, center.lng, 250, 50));
         if (rows.length === 0) rows = asArray<LocationLite>(await client.listLocations({ pageSize: 50 }));
         if (alive) setLocations(rows);
       } catch (e) {
@@ -34,7 +37,29 @@ export function HomeScreen() {
     return () => {
       alive = false;
     };
-  }, [client]);
+  }, [client, center]);
+
+  // Geocode a typed place/address (OpenStreetMap Nominatim) and recenter the map.
+  async function geocode() {
+    const q = query.trim();
+    if (!q) return;
+    setSearching(true);
+    setError(null);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
+      const data = (await res.json()) as Array<{ lat: string; lon: string }>;
+      if (data[0]) {
+        setCenter({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        setQuery(''); // show the full set for the new area
+      } else {
+        setError('No place found for that search.');
+      }
+    } catch {
+      setError('Couldn’t reach the geocoder. Check your connection.');
+    } finally {
+      setSearching(false);
+    }
+  }
 
   const filtered = query
     ? locations.filter((l) => `${l.name ?? ''} ${l.address ?? ''} ${l.city ?? ''}`.toLowerCase().includes(query.toLowerCase()))
@@ -55,10 +80,18 @@ export function HomeScreen() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, city, address"
+            onKeyDown={(e) => { if (e.key === 'Enter') geocode(); }}
+            placeholder="Search a city or address…"
+            enterKeyHint="search"
             className="h-full w-full bg-transparent text-[15px] outline-none placeholder:text-text-faint"
           />
+          {searching && <Spinner className="h-4 w-4 text-volt" />}
         </div>
+        {center !== ORIGIN && (
+          <button onClick={() => { setCenter(ORIGIN); setQuery(''); }} className="mt-2 text-[12px] font-medium text-volt">
+            ← Back to San Juan
+          </button>
+        )}
       </div>
 
       {/* Active charging session — resume from anywhere in the app */}
@@ -84,7 +117,7 @@ export function HomeScreen() {
 
       {/* Live interactive station map */}
       <div className="px-5 pt-4">
-        <LiveMap locations={filtered} origin={ORIGIN} onSelect={(id) => navigate(`/location/${id}`)} />
+        <LiveMap locations={filtered} origin={center} onSelect={(id) => navigate(`/location/${id}`)} />
       </div>
 
       {/* List */}

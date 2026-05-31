@@ -69,9 +69,10 @@ export function LocationScreen() {
           </div>
         )}
 
-        {/* Amenities — what's at this site (parking, restrooms, wifi) + a call shortcut */}
-        {l && (l.hasParking || l.hasRestrooms || l.hasWifi || l.phone) && (
+        {/* Amenities — what's at this site (hours, parking, restrooms, wifi) + a call shortcut */}
+        {l && (l.openingHours || l.hasParking || l.hasRestrooms || l.hasWifi || l.phone) && (
           <div className="flex flex-wrap items-center gap-2">
+            {l.openingHours && hoursLabel(l.openingHours, t) && <AmenityChip icon="🕐" label={hoursLabel(l.openingHours, t)!} />}
             {l.hasParking && <AmenityChip icon="🅿️" label={t('Parking')} />}
             {l.hasRestrooms && <AmenityChip icon="🚻" label={t('Restrooms')} />}
             {l.hasWifi && <AmenityChip icon="📶" label={t('WiFi')} />}
@@ -335,6 +336,19 @@ function StarInput({ value, onChange }: { value: number; onChange: (v: number) =
       ))}
     </div>
   );
+}
+
+/** Compact opening-hours label: "Open 24/7", today's window, or "Closed today". */
+function hoursLabel(
+  oh: { twentyFourSeven: boolean; regular: { weekday: number; open: string; close: string }[] },
+  t: (s: string) => string,
+): string | null {
+  if (oh.twentyFourSeven) return t('Open 24/7');
+  if (!oh.regular?.length) return null;
+  const jsDay = new Date().getDay(); // 0=Sun..6=Sat → OCPI 1=Mon..7=Sun
+  const ocpiDay = jsDay === 0 ? 7 : jsDay;
+  const today = oh.regular.find((r) => r.weekday === ocpiDay);
+  return today ? `${t('Today')} ${today.open}–${today.close}` : t('Closed today');
 }
 
 function AmenityChip({ icon, label }: { icon: string; label: string }) {

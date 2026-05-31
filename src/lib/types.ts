@@ -41,6 +41,10 @@ export interface LocationLite {
   phone?: string;
   ratingAverage?: number | null;
   ratingCount?: number;
+  openingHours?: {
+    twentyFourSeven: boolean;
+    regular: { weekday: number; open: string; close: string }[];
+  };
 }
 
 export interface LocationReview {

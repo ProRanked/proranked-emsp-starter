@@ -77,7 +77,7 @@ export function AccountScreen() {
             {prefs.loading ? (
               <div className="flex justify-center py-8 text-volt"><Spinner /></div>
             ) : prefs.featureDisabled ? (
-              <p className="px-4 py-5 text-[13px] text-text-soft">Notifications aren’t enabled by your provider.</p>
+              <p className="px-4 py-5 text-[13px] text-text-soft">{t('Notifications aren’t enabled by your provider.')}</p>
             ) : (
               ([
                 ['push', 'Push notifications', 'Charging started, stopped, and reminders'],
@@ -86,8 +86,8 @@ export function AccountScreen() {
               ] as const).map(([key, title, sub]) => (
                 <div key={key} className="flex items-center justify-between px-4 py-3.5">
                   <div className="pr-3">
-                    <p className="text-[14px] font-medium">{title}</p>
-                    <p className="text-[12px] text-text-soft">{sub}</p>
+                    <p className="text-[14px] font-medium">{t(title)}</p>
+                    <p className="text-[12px] text-text-soft">{t(sub)}</p>
                   </div>
                   <Toggle checked={!!channels[key]} onChange={(v) => toggle(key, v)} />
                 </div>
@@ -108,17 +108,17 @@ export function AccountScreen() {
               <div className="flex items-start gap-3">
                 <CardIcon className="mt-0.5 h-5 w-5 text-volt" />
                 <div>
-                  <p className="text-[14px] font-semibold">Managed by Voltway</p>
-                  <p className="mt-0.5 text-[12.5px] text-text-soft">Add a card to charge instantly. Receipts arrive after each session.</p>
-                  <Button variant="outline" className="mt-3 h-10 w-auto px-4">Add payment method</Button>
+                  <p className="text-[14px] font-semibold">{t('Managed by Voltway')}</p>
+                  <p className="mt-0.5 text-[12.5px] text-text-soft">{t('Add a card to charge instantly. Receipts arrive after each session.')}</p>
+                  <Button variant="outline" className="mt-3 h-10 w-auto px-4">{t('Add payment method')}</Button>
                 </div>
               </div>
             ) : (
               <div className="flex items-start gap-3">
                 <LeafIcon className="mt-0.5 h-5 w-5 text-volt" />
                 <div>
-                  <p className="text-[14px] font-semibold">Billed directly by your provider</p>
-                  <p className="mt-0.5 text-[12.5px] text-text-soft">{pay.data?.note ?? 'This network handles payment on its own — nothing to set up here.'}</p>
+                  <p className="text-[14px] font-semibold">{t('Billed directly by your provider')}</p>
+                  <p className="mt-0.5 text-[12.5px] text-text-soft">{pay.data?.note ?? t('This network handles payment on its own — nothing to set up here.')}</p>
                 </div>
               </div>
             )}

@@ -92,6 +92,7 @@ const ES: Record<string, string> = {
   'Auto-stops at': 'Se detiene automáticamente al',
   'No limit': 'Sin límite',
   'Charge limit reached — stopping.': 'Límite de carga alcanzado — deteniendo.',
+  'Battery at end': 'Batería al final',
   minutes: 'minutos',
   min: 'min',
   cost: 'costo',

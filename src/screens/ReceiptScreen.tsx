@@ -87,6 +87,7 @@ export function ReceiptScreen() {
             <Card className="space-y-2">
               {start && <Row label={t('Started')} value={start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} />}
               {end && <Row label={t('Ended')} value={end.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} />}
+              {s.currentSocPercent != null && <Row label={t('Battery at end')} value={`${Math.round(s.currentSocPercent)}%`} />}
               <Row label={t('Charger')} value={s.chargerUid ?? '—'} />
               {s.connectorNumber != null && <Row label={t('Connector')} value={`#${s.connectorNumber}`} />}
               {s.authMethod && <Row label={t('Authorized via')} value={s.authMethod} />}

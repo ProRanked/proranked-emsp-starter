@@ -5,7 +5,7 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, EmptyState, SkeletonList, StatusPill, Banner, Button, ErrorState, useAsync } from '../components/ui.tsx';
 import { ChevronLeft, HeartIcon, PlugIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
-import { asArray, type ChargerLite, type LocationLite } from '../lib/types.ts';
+import { asArray, type ChargerLite, type LocationLite, type ReviewsResponse } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
 export function LocationScreen() {
@@ -122,7 +122,140 @@ export function LocationScreen() {
             ))}
           </div>
         </div>
+
+        <LocationReviews locationId={id} />
       </div>
+    </div>
+  );
+}
+
+function LocationReviews({ locationId }: { locationId: string }) {
+  const { client, driver } = usePhevnix();
+  const { t } = useT();
+  const data = useAsync(() => client.getLocationReviews(locationId) as Promise<ReviewsResponse>, [locationId]);
+  const [writing, setWriting] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // Reviews can be disabled per network (capability gate) — degrade silently.
+  if (data.featureDisabled) return null;
+
+  const summary = data.data?.summary;
+  const list = data.data?.reviews ?? [];
+  const mine = list.find((r) => r.isMine);
+
+  async function submit() {
+    setBusy(true);
+    setErr(null);
+    try {
+      await client.submitLocationReview(locationId, { rating, comment: comment.trim() || undefined });
+      setWriting(false);
+      setComment('');
+      data.reload();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('Could not save.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startWriting() {
+    if (mine) {
+      setRating(mine.rating);
+      setComment(mine.comment ?? '');
+    }
+    setWriting(true);
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-[15px] font-bold">{t('Reviews')}</h2>
+        {summary && summary.count > 0 && (
+          <span className="flex items-center gap-1.5 text-[12.5px] text-text-soft">
+            <Stars value={summary.average} />
+            <b className="text-text">{summary.average.toFixed(1)}</b> · {summary.count}
+          </span>
+        )}
+      </div>
+
+      {data.loading && <SkeletonList rows={2} />}
+
+      {!data.loading && list.length === 0 && !writing && (
+        <p className="mb-3 text-[13px] text-text-soft">{t('No reviews yet — be the first to rate this site.')}</p>
+      )}
+
+      {/* Write / edit a review (drivers only) */}
+      {driver && !writing && (
+        <Button variant="outline" className="mb-3 h-10" onClick={startWriting}>
+          {mine ? t('Edit your review') : t('Write a review')}
+        </Button>
+      )}
+      {writing && (
+        <Card className="mb-3 space-y-3">
+          <StarInput value={rating} onChange={setRating} />
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            maxLength={1000}
+            rows={3}
+            placeholder={t('Share details (optional)')}
+            className="w-full resize-none rounded-xl border border-line bg-ink-soft px-3 py-2 text-[14px] outline-none placeholder:text-text-faint"
+          />
+          {err && <Banner tone="warn">{err}</Banner>}
+          <div className="flex gap-2">
+            <Button onClick={submit} loading={busy} className="h-10">{t('Submit')}</Button>
+            <Button variant="outline" onClick={() => setWriting(false)} className="h-10">{t('Cancel')}</Button>
+          </div>
+        </Card>
+      )}
+
+      <div className="space-y-3">
+        {list.map((r) => (
+          <Card key={r.id} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Stars value={r.rating} />
+              <span className="text-[11px] text-text-faint">
+                {r.isMine ? t('You') : r.authorName ?? 'Driver'}
+                {r.updatedAt ? ` · ${new Date(r.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
+              </span>
+            </div>
+            {r.comment && <p className="text-[13.5px] text-text-soft">{r.comment}</p>}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Read-only star row (supports halves visually by rounding). */
+function Stars({ value }: { value: number }) {
+  const full = Math.round(value);
+  return (
+    <span className="text-[13px] tracking-tight text-amber" aria-label={`${value} stars`}>
+      {'★★★★★'.slice(0, full)}
+      <span className="text-line">{'★★★★★'.slice(full)}</span>
+    </span>
+  );
+}
+
+/** Interactive 1–5 star picker. */
+function StarInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          aria-label={`${n} stars`}
+          className={`text-[28px] leading-none transition ${n <= value ? 'text-amber' : 'text-line'}`}
+        >
+          ★
+        </button>
+      ))}
     </div>
   );
 }

@@ -118,6 +118,13 @@ const ES: Record<string, string> = {
   // Location detail
   'Charging site': 'Estación de carga',
   'Chargers at this site': 'Cargadores en este sitio',
+  Reviews: 'Reseñas',
+  'No reviews yet — be the first to rate this site.': 'Aún no hay reseñas — sé el primero en calificar este sitio.',
+  'Write a review': 'Escribir una reseña',
+  'Edit your review': 'Editar tu reseña',
+  'Share details (optional)': 'Comparte detalles (opcional)',
+  Submit: 'Enviar',
+  You: 'Tú',
   Parking: 'Estacionamiento',
   Restrooms: 'Baños',
   WiFi: 'WiFi',

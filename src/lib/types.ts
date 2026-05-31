@@ -39,6 +39,23 @@ export interface LocationLite {
   hasRestrooms?: boolean;
   hasWifi?: boolean;
   phone?: string;
+  ratingAverage?: number | null;
+  ratingCount?: number;
+}
+
+export interface LocationReview {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  authorName?: string;
+  isMine?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReviewsResponse {
+  summary: { average: number; count: number };
+  reviews: LocationReview[];
 }
 
 export interface Tariff {

@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { Button, Field, Banner } from '../components/ui.tsx';
 import { BoltIcon } from '../components/icons.tsx';
+import { useT } from '../lib/i18n.tsx';
 
 export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
   const { login, register, keyConfigured } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -44,10 +46,10 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
             </div>
           </div>
           <h2 className="mt-12 text-[28px] font-bold leading-tight">
-            {mode === 'register' ? 'Create your account' : 'Welcome back'}
+            {mode === 'register' ? t('Create your account') : t('Welcome back')}
           </h2>
           <p className="mt-1.5 text-[14px] text-text-soft">
-            {mode === 'register' ? 'Start charging in under a minute.' : 'Sign in to find and start charging.'}
+            {mode === 'register' ? t('Start charging in under a minute.') : t('Sign in to find and start charging.')}
           </p>
         </div>
 
@@ -64,11 +66,11 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
               <Field label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required autoComplete="family-name" />
             </div>
           )}
-          <Field label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com" />
-          <Field label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} placeholder="••••••••" />
+          <Field label={t('Email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com" />
+          <Field label={t('Password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} placeholder="••••••••" />
           {error && <Banner tone="warn">{error}</Banner>}
           <div className="pt-1">
-            <Button type="submit" loading={busy}>{mode === 'register' ? 'Create account' : 'Sign in'}</Button>
+            <Button type="submit" loading={busy}>{mode === 'register' ? t('Create account') : t('Sign in')}</Button>
           </div>
         </form>
 
@@ -76,9 +78,9 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
         <div className="space-y-4 pb-6 text-center">
           <p className="text-[13px] text-text-soft">
             {mode === 'register' ? (
-              <>Already have an account? <Link to="/login" className="font-semibold text-volt">Sign in</Link></>
+              <>{t('Already have an account?')} <Link to="/login" className="font-semibold text-volt">{t('Sign in')}</Link></>
             ) : (
-              <>New to Voltway? <Link to="/register" className="font-semibold text-volt">Create one</Link></>
+              <>{t('New to Voltway?')} <Link to="/register" className="font-semibold text-volt">{t('Create one')}</Link></>
             )}
           </p>
           <p className="text-[10px] uppercase tracking-wider text-text-faint">Powered by the Phevnix eMSP API</p>

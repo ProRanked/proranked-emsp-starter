@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { MapIcon, ClockIcon, HeartIcon, UserIcon, ReceiptIcon } from './icons.tsx';
 import { WelcomeOverlay } from './WelcomeOverlay.tsx';
+import { useT } from '../lib/i18n.tsx';
 
 const TABS = [
   { to: '/', label: 'Charge', Icon: MapIcon, end: true },
@@ -13,6 +14,7 @@ const TABS = [
 
 export function AppLayout() {
   const { pathname } = useLocation();
+  const { t } = useT();
   // Hide the tab bar on full-screen flows (charger detail, active session, auth).
   const hideNav = /^\/(charger|session|location|login|register)/.test(pathname);
   return (
@@ -37,7 +39,7 @@ export function AppLayout() {
                   }
                 >
                   <Icon className="h-[22px] w-[22px]" />
-                  {label}
+                  {t(label)}
                 </NavLink>
               ))}
             </div>

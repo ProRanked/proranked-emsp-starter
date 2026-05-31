@@ -5,6 +5,7 @@ import { Card, EmptyState, SkeletonList, Spinner, ErrorState } from '../componen
 import { BoltIcon, SearchIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type LocationLite } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 // San Juan, PR — a sensible default origin for the demo network.
 const ORIGIN = { lat: 18.4248, lng: -66.0758 };
@@ -12,6 +13,7 @@ const ORIGIN = { lat: 18.4248, lng: -66.0758 };
 export function HomeScreen() {
   const { client, driver, activeSession } = usePhevnix();
   const navigate = useNavigate();
+  const { t } = useT();
   const [query, setQuery] = useState('');
   const [center, setCenter] = useState(ORIGIN);
   const [searching, setSearching] = useState(false);
@@ -81,7 +83,7 @@ export function HomeScreen() {
     <div>
       {/* Greeting */}
       <div className="px-5 pt-6">
-        <p className="text-[13px] text-text-soft">Good to see you,</p>
+        <p className="text-[13px] text-text-soft">{t('Good to see you,')}</p>
         <h1 className="text-[26px] font-extrabold tracking-tight">{driver?.firstName ?? 'Driver'} ⚡</h1>
       </div>
 
@@ -93,7 +95,7 @@ export function HomeScreen() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') geocode(); }}
-            placeholder="Search a city or address…"
+            placeholder={t('Search a city or address…')}
             aria-label="Search for a city or address"
             enterKeyHint="search"
             className="h-full w-full bg-transparent text-[15px] outline-none placeholder:text-text-faint"
@@ -102,7 +104,7 @@ export function HomeScreen() {
         </div>
         {center !== ORIGIN && (
           <button onClick={() => { setCenter(ORIGIN); setQuery(''); }} className="mt-2 text-[12px] font-medium text-volt">
-            ← Back to San Juan
+            {t('← Back to San Juan')}
           </button>
         )}
       </div>
@@ -118,9 +120,9 @@ export function HomeScreen() {
               <BoltIcon className="h-6 w-6 animate-pulse-volt" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-volt">Charging in progress</p>
+              <p className="text-[14px] font-bold text-volt">{t('Charging in progress')}</p>
               <p className="truncate text-[12.5px] text-text-soft">
-                {(activeSession.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered · tap to view &amp; stop
+                {(activeSession.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered · {t('tap to view & stop')}
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-volt" />
@@ -135,8 +137,8 @@ export function HomeScreen() {
 
       {/* Filters */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-4">
-        <Chip label="Available now" active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} />
-        <Chip label="Fast ⚡" active={onlyFast} onClick={() => setOnlyFast((v) => !v)} />
+        <Chip label={t('Available now')} active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} />
+        <Chip label={t('Fast ⚡')} active={onlyFast} onClick={() => setOnlyFast((v) => !v)} />
         {categories.map((c) => (
           <Chip key={c} label={c} active={connFilter === c} onClick={() => setConnFilter((v) => (v === c ? null : c))} />
         ))}
@@ -145,14 +147,14 @@ export function HomeScreen() {
       {/* List */}
       <div className="px-5 pb-6 pt-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[15px] font-bold">Chargers near you</h2>
+          <h2 className="text-[15px] font-bold">{t('Chargers near you')}</h2>
           <span className="text-[12px] text-text-soft">{filtered.length} {filtered.length === 1 ? 'site' : 'sites'}</span>
         </div>
 
         {loading && <SkeletonList rows={3} />}
         {error && !loading && <ErrorState message={`Couldn’t load locations: ${error}`} onRetry={() => setReloadKey((k) => k + 1)} />}
         {!loading && !error && filtered.length === 0 && (
-          <EmptyState icon={<PinIcon className="h-9 w-9" />} title="No charging sites yet" subtitle="This network hasn’t published any public locations." />
+          <EmptyState icon={<PinIcon className="h-9 w-9" />} title={t('No charging sites yet')} subtitle="This network hasn’t published any public locations." />
         )}
 
         <div className="space-y-3">
@@ -171,7 +173,7 @@ export function HomeScreen() {
                     {loc.distanceKm != null && <span>{loc.distanceKm.toFixed(1)} km away</span>}
                     {loc.availableCount != null && loc.chargerCount != null ? (
                       <span className={loc.availableCount > 0 ? 'text-volt' : 'text-amber'}>
-                        · {loc.availableCount > 0 ? `${loc.availableCount} available` : 'In use'}
+                        · {loc.availableCount > 0 ? `${loc.availableCount} ${t('available')}` : t('In use')}
                       </span>
                     ) : (
                       loc.chargerCount != null && <span>· {loc.chargerCount} chargers</span>

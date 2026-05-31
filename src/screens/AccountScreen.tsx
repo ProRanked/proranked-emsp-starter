@@ -5,10 +5,12 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, Spinner, Toggle, Button, Banner, useAsync, money } from '../components/ui.tsx';
 import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
 import { asArray, type NotificationPreferences, type PaymentConfig, type ChargingSession } from '../lib/types.ts';
+import { useT } from '../lib/i18n.tsx';
 
 export function AccountScreen() {
   const { client, driver, logout } = usePhevnix();
   const navigate = useNavigate();
+  const { t, lang, setLang } = useT();
 
   const prefs = useAsync(() => client.getNotificationPreferences() as Promise<NotificationPreferences>, []);
   const pay = useAsync(() => client.getPaymentConfig() as Promise<PaymentConfig>, []);
@@ -36,7 +38,7 @@ export function AccountScreen() {
 
   return (
     <div>
-      <ScreenHeader title="Account" />
+      <ScreenHeader title={t('Account')} />
       <div className="space-y-5 px-5 py-5">
         {/* Profile */}
         <div className="flex items-center gap-4">
@@ -51,22 +53,22 @@ export function AccountScreen() {
         <Card className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[12px] text-text-soft">Your charge tag (RFID)</p>
+              <p className="text-[12px] text-text-soft">{t('Your charge tag (RFID)')}</p>
               <p className="font-mono text-[15px] font-bold tracking-[0.15em]">{driver?.tokenUid ?? '—'}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-volt/10 text-volt"><BoltIcon className="h-5 w-5" /></div>
           </div>
           <div className="grid grid-cols-3 gap-3 border-t border-line pt-3 text-center">
-            <div><p className="text-[16px] font-bold">{sList.length}</p><p className="text-[11px] text-text-soft">sessions</p></div>
+            <div><p className="text-[16px] font-bold">{sList.length}</p><p className="text-[11px] text-text-soft">{t('sessions')}</p></div>
             <div><p className="text-[16px] font-bold">{totalKwh.toFixed(0)}</p><p className="text-[11px] text-text-soft">kWh</p></div>
-            <div><p className="text-[16px] font-bold">{money(totalSpent, statsCurrency)}</p><p className="text-[11px] text-text-soft">spent</p></div>
+            <div><p className="text-[16px] font-bold">{money(totalSpent, statsCurrency)}</p><p className="text-[11px] text-text-soft">{t('spent')}</p></div>
           </div>
         </Card>
 
         {/* Notifications */}
         <section>
           <h2 className="mb-2.5 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-text-faint">
-            <BellIcon className="h-4 w-4" /> Notifications
+            <BellIcon className="h-4 w-4" /> {t('Notifications')}
           </h2>
           <Card className="divide-y divide-line p-0">
             {prefs.loading ? (
@@ -94,7 +96,7 @@ export function AccountScreen() {
         {/* Payment */}
         <section>
           <h2 className="mb-2.5 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-text-faint">
-            <CardIcon className="h-4 w-4" /> Payment
+            <CardIcon className="h-4 w-4" /> {t('Payment')}
           </h2>
           <Card>
             {pay.loading ? (
@@ -120,17 +122,33 @@ export function AccountScreen() {
           </Card>
         </section>
 
+        {/* Language */}
+        <section>
+          <h2 className="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-text-faint">{t('Language')}</h2>
+          <Card className="flex gap-2">
+            {(['en', 'es'] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition ${lang === l ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+              >
+                {l === 'en' ? 'English' : 'Español'}
+              </button>
+            ))}
+          </Card>
+        </section>
+
         {/* Account actions */}
         <section>
           <Card className="divide-y divide-line p-0">
             <button onClick={() => navigate('/vehicles')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[14px]">
-              <BoltIcon className="h-5 w-5 text-text-soft" /> My vehicles
+              <BoltIcon className="h-5 w-5 text-text-soft" /> {t('My vehicles')}
             </button>
             <button onClick={() => navigate('/reservations')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[14px]">
-              <UserIcon className="h-5 w-5 text-text-soft" /> My reservations
+              <UserIcon className="h-5 w-5 text-text-soft" /> {t('My reservations')}
             </button>
             <button onClick={logout} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-[14px] text-rose">
-              Sign out
+              {t('Sign out')}
             </button>
           </Card>
         </section>

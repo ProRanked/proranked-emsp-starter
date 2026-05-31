@@ -42,7 +42,7 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Reservations | ✅ | `screens/ReservationsScreen.tsx` |
 | Charging history | ✅ | `screens/ActivityScreen.tsx` |
 | Itemized receipts (+ share) | ✅ | `screens/ReceiptScreen.tsx` |
-| Scheduled / departure-time charging | ⬜ | not built (eMSP API has no schedule primitive yet) |
+| Scheduled / departure-time charging | ✅ | **built this session** — CPO `/emsp/v1/charging/schedule(s)` + `ScheduledChargeService` trigger; app `ChargerScreen` picker + Reservations list. Trigger verified live (seeded schedule auto-fired a real remote-start on the sim → row `Fired`) |
 | Charging insights / impact dashboard | ⬜→✅ | **built this session** — `screens/InsightsScreen.tsx` |
 
 ## C — Payments
@@ -79,16 +79,21 @@ Tesla). Each row cites the file that implements it. Updated 2026-05-31.
 | Accessibility (WCAG AA) | ✅ | axe-core: 0 violations on Home/Account/Trip; pinch-zoom enabled, 4.5:1 contrast, labeled switches |
 
 ## Scorecard (driver-facing features; ➖ excluded)
-- **Present (✅): 45**
+- **Present (✅): 46**
 - **Partial (🟡): 0**
-- **Missing (⬜): 1** (scheduled charging — needs an eMSP API primitive)
+- **Missing (⬜): 0**
 - **Credential-gated (not counted): Smartcar parked-car SoC**
 
-**Driver-facing parity ≈ 98%** (45 / 46 applicable). The single remaining miss — scheduled /
-departure-time charging — is genuinely a *server-side* primitive (a CPO schedule endpoint + a
-background trigger that fires the remote start), not something to fake with a PWA timer; it's the
-right next backend feature. Smartcar is credential-gated and its core value (charging-time SoC)
-is already delivered via OCPP.
+**Driver-facing parity ≈ 100%** (46 / 46 applicable). Every driver-facing feature in the premium
+competitive set is now implemented; the only item outside this count is Smartcar (parked-car SoC),
+which needs a third-party developer credential and whose core value — charging-time SoC — is
+already delivered via OCPP.
+
+*Verification note:* the scheduled-charging background trigger was verified live (a seeded due
+schedule auto-fired a real remote-start on a sim charger and the row went `Fired`); the
+create/list endpoints are deployed (`GET /schedules` → 200) and unit-tested, but the
+POST-via-live-driver-UI path was not re-exercised this session because the app's demo login had
+expired and creating an account to work around it was out of scope.
 
 ## Closed this session
 1. ✅ Charging insights / impact dashboard (`InsightsScreen`) — verified on real history.

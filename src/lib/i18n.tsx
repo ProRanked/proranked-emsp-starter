@@ -118,6 +118,10 @@ const ES: Record<string, string> = {
   // Location detail
   'Charging site': 'Estación de carga',
   'Chargers at this site': 'Cargadores en este sitio',
+  Parking: 'Estacionamiento',
+  Restrooms: 'Baños',
+  WiFi: 'WiFi',
+  Call: 'Llamar',
   'No chargers listed': 'No hay cargadores listados',
   'Saved places aren’t enabled by your provider.': 'Tu proveedor no ha habilitado los lugares guardados.',
   'Could not save.': 'No se pudo guardar.',

@@ -69,6 +69,23 @@ export function LocationScreen() {
           </div>
         )}
 
+        {/* Amenities — what's at this site (parking, restrooms, wifi) + a call shortcut */}
+        {l && (l.hasParking || l.hasRestrooms || l.hasWifi || l.phone) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {l.hasParking && <AmenityChip icon="🅿️" label={t('Parking')} />}
+            {l.hasRestrooms && <AmenityChip icon="🚻" label={t('Restrooms')} />}
+            {l.hasWifi && <AmenityChip icon="📶" label={t('WiFi')} />}
+            {l.phone && (
+              <a
+                href={`tel:${l.phone}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-volt/40 bg-volt/10 px-3 py-1.5 text-[12.5px] font-semibold text-volt"
+              >
+                <span aria-hidden>📞</span> {t('Call')}
+              </a>
+            )}
+          </div>
+        )}
+
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[15px] font-bold">{t('Chargers at this site')}</h2>
@@ -107,5 +124,13 @@ export function LocationScreen() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AmenityChip({ icon, label }: { icon: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card-2 px-3 py-1.5 text-[12.5px] font-medium text-text-soft">
+      <span aria-hidden>{icon}</span> {label}
+    </span>
   );
 }

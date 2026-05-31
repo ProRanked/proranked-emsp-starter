@@ -35,6 +35,10 @@ export interface LocationLite {
   maxPowerKw?: number;
   connectorTypes?: string[];
   images?: { url?: string; thumbnailUrl?: string }[];
+  hasParking?: boolean;
+  hasRestrooms?: boolean;
+  hasWifi?: boolean;
+  phone?: string;
 }
 
 export interface Tariff {

@@ -149,7 +149,13 @@ export function HomeScreen() {
                   </p>
                   <div className="mt-1.5 flex items-center gap-3 text-[11px] text-text-faint">
                     {loc.distanceKm != null && <span>{loc.distanceKm.toFixed(1)} km away</span>}
-                    {loc.chargerCount != null && <span>· {loc.chargerCount} chargers</span>}
+                    {loc.availableCount != null && loc.chargerCount != null ? (
+                      <span className={loc.availableCount > 0 ? 'text-volt' : 'text-amber'}>
+                        · {loc.availableCount > 0 ? `${loc.availableCount} available` : 'In use'}
+                      </span>
+                    ) : (
+                      loc.chargerCount != null && <span>· {loc.chargerCount} chargers</span>
+                    )}
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-text-faint" />

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, EmptyState, Spinner, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
 import { BoltIcon, ReceiptIcon, ChevronRight } from '../components/icons.tsx';
 import { asArray, type ChargingSession } from '../lib/types.ts';
 
@@ -26,7 +26,7 @@ export function ActivityScreen() {
     <div>
       <ScreenHeader title="Activity" subtitle="Your charging history & receipts" />
       <div className="space-y-3 px-5 py-5">
-        {list.loading && <div className="flex justify-center py-16 text-volt"><Spinner className="h-7 w-7" /></div>}
+        {list.loading && <SkeletonList rows={4} />}
         {list.error && <Banner tone="warn">{list.error}</Banner>}
 
         {!list.loading && !list.error && sessions.length === 0 && (

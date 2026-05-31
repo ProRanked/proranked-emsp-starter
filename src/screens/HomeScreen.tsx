@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
-import { Card, EmptyState, Spinner, Banner } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, Banner } from '../components/ui.tsx';
 import { BoltIcon, SearchIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type LocationLite } from '../lib/types.ts';
@@ -94,9 +94,7 @@ export function HomeScreen() {
           <span className="text-[12px] text-text-soft">{filtered.length} {filtered.length === 1 ? 'site' : 'sites'}</span>
         </div>
 
-        {loading && (
-          <div className="flex justify-center py-16 text-volt"><Spinner className="h-7 w-7" /></div>
-        )}
+        {loading && <SkeletonList rows={3} />}
         {error && !loading && <Banner tone="warn">Couldn’t load locations: {error}</Banner>}
         {!loading && !error && filtered.length === 0 && (
           <EmptyState icon={<PinIcon className="h-9 w-9" />} title="No charging sites yet" subtitle="This network hasn’t published any public locations." />

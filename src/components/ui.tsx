@@ -76,6 +76,28 @@ export function Card({ children, className = '', onClick }: { children: ReactNod
   );
 }
 
+// ── Skeleton loaders ────────────────────────────────────────────────────────
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse rounded-xl bg-line/60 ${className}`} />;
+}
+
+/** A few card-shaped skeleton rows — used while lists load (perceived speed). */
+export function SkeletonList({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3.5 rounded-3xl border border-line bg-card p-4">
+          <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-1/2" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Text field ────────────────────────────────────────────────────────────
 export function Field({ label, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (

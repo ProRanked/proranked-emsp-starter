@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, EmptyState, Spinner, StatusPill, Banner, Button, useAsync } from '../components/ui.tsx';
+import { Card, EmptyState, SkeletonList, StatusPill, Banner, Button, useAsync } from '../components/ui.tsx';
 import { ChevronLeft, HeartIcon, PlugIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
 import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type ChargerLite, type LocationLite } from '../lib/types.ts';
@@ -80,7 +80,7 @@ export function LocationScreen() {
               );
             })()}
           </div>
-          {chargers.loading && <div className="flex justify-center py-12 text-volt"><Spinner className="h-7 w-7" /></div>}
+          {chargers.loading && <SkeletonList rows={3} />}
           {chargers.error && <Banner tone="warn">{chargers.error}</Banner>}
           {!chargers.loading && (chargers.data?.length ?? 0) === 0 && (
             <EmptyState icon={<PlugIcon className="h-9 w-9" />} title="No chargers listed" />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePhevnix, requestNotificationPermission } from '../context/PhevnixProvider.tsx';
+import { subscribeToPush } from '../lib/push.ts';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, Spinner, Toggle, Button, Banner, useAsync, money } from '../components/ui.tsx';
 import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
@@ -26,9 +27,14 @@ export function AccountScreen() {
 
   async function toggle(key: 'push' | 'email' | 'sms', value: boolean) {
     setLocal((s) => ({ ...s, [key]: value }));
-    // Turning push on also asks the browser for OS-notification permission so session
-    // events (charging started/complete) can surface in the system notification center.
-    if (key === 'push' && value) void requestNotificationPermission();
+    // Turning push on asks for OS-notification permission and registers this device for
+    // web push, so session events surface in the system notification center even when the
+    // app tab is closed.
+    if (key === 'push' && value) {
+      void requestNotificationPermission().then((ok) => {
+        if (ok) void subscribeToPush(client);
+      });
+    }
     const map = { push: 'pushEnabled', email: 'emailEnabled', sms: 'smsEnabled' } as const;
     try {
       await client.updateNotificationPreferences({ [map[key]]: value });

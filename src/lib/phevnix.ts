@@ -256,6 +256,19 @@ export class PhevnixEmspClient {
     return this.request('POST', `/emsp/v1/locations/${id}/report`, { body: input });
   }
 
+  // Web push: register/remove this device's push subscription for the signed-in driver.
+  subscribePush(subscription: unknown): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/push/subscribe', { body: subscription });
+  }
+
+  unsubscribePush(endpoint: string): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/push/unsubscribe', { body: { endpoint } });
+  }
+
+  sendTestPush(): Promise<unknown> {
+    return this.request('POST', '/emsp/v1/push/test', {});
+  }
+
   listChargers(query: { page?: number; pageSize?: number } = {}): Promise<unknown> {
     return this.request('GET', '/emsp/v1/chargers', { query });
   }

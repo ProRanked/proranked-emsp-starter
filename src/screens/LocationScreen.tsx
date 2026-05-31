@@ -68,7 +68,18 @@ export function LocationScreen() {
         )}
 
         <div>
-          <h2 className="mb-3 text-[15px] font-bold">Chargers at this site</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold">Chargers at this site</h2>
+            {!chargers.loading && (chargers.data?.length ?? 0) > 0 && (() => {
+              const avail = (chargers.data ?? []).filter((c) => /available/i.test(c.status ?? '')).length;
+              const total = chargers.data!.length;
+              return (
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${avail > 0 ? 'bg-volt/10 text-volt' : 'bg-line text-text-soft'}`}>
+                  {avail} of {total} available
+                </span>
+              );
+            })()}
+          </div>
           {chargers.loading && <div className="flex justify-center py-12 text-volt"><Spinner className="h-7 w-7" /></div>}
           {chargers.error && <Banner tone="warn">{chargers.error}</Banner>}
           {!chargers.loading && (chargers.data?.length ?? 0) === 0 && (

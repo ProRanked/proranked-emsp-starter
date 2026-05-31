@@ -111,7 +111,7 @@ export function ChargerScreen() {
                       </div>
                       <div className="flex-1">
                         <p className="text-[14px] font-semibold">Connector {num}</p>
-                        <p className="text-[12px] text-text-soft">{cn.standard ?? 'Type 2'}{cn.maxPowerKw ? ` · ${cn.maxPowerKw} kW` : ''}</p>
+                        <p className="text-[12px] text-text-soft">{connectorLabel(cn.standard)}{cn.maxPowerKw ? ` · ${cn.maxPowerKw} kW` : ''}</p>
                       </div>
                       <StatusPill status={cn.status} />
                     </button>
@@ -150,6 +150,20 @@ export function ChargerScreen() {
       </div>
     </div>
   );
+}
+
+/** Map raw OCPI/OCPP connector standards to friendly driver-facing names. */
+function connectorLabel(standard?: string): string {
+  if (!standard) return 'Type 2';
+  const s = standard.toUpperCase();
+  if (s.includes('T1_COMBO') || s === 'CCS1') return 'CCS1';
+  if (s.includes('T2_COMBO') || s === 'CCS2' || s === 'CCS') return 'CCS';
+  if (s.includes('CHADEMO')) return 'CHAdeMO';
+  if (s.includes('T1') || s.includes('J1772')) return 'Type 1 (J1772)';
+  if (s.includes('T2')) return 'Type 2';
+  if (s.includes('TESLA')) return 'Tesla';
+  if (s.includes('DOMESTIC')) return 'Wall plug';
+  return standard.replace(/_/g, ' ');
 }
 
 function errText(e: unknown): string {

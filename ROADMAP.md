@@ -30,7 +30,7 @@ What the pros have that we don't yet:
 - **Phase 1 — Real map** ✅ DONE. Leaflet/OSM dark map, branded pins, deep-link popups, fit-to-bounds, invalid-coord guard. (Surfaced + flagged the backend geocoding gap — locations ship null/0,0 coords.)
 - **Phase 2 — Charging history + receipts** ✅ DONE. Activity tab (history + lifetime summary), itemized Receipt screen (energy/duration/peak, start/end, charger, auth method, reconciled cost breakdown, share), and stop→receipt flow. (Surfaced a backend billing bug: session Total excludes SessionFees.)
 - **Phase 3 — Map filters + search + status pins**: filter by connector/speed/available-now; search-by-address (geocode); color pins by real-time availability (needs availability counts in the locations payload).
-- **Phase 4 — Richer station detail**: per-connector live status + type icons, pricing breakdown, directions, amenities/hours.
+- **Phase 4 — Richer station detail** 🔨 IN PROGRESS: ✅ real street-level mini-map, ✅ Get Directions deep link, ✅ "X of Y available now" summary, ✅ friendly connector names (Type 1/2, CCS, CHAdeMO). TODO: pricing breakdown, amenities/hours, per-connector live status.
 - **Phase 5 — Payments + notifications**: saved cards/wallet, payment history; notification preferences + charge-complete/idle push.
 - **Phase 6 — Vehicles + Favorites + Reservations UX**: enable the gated capabilities, polish the management flows.
 - **Phase 7 — Polish & trust**: onboarding, skeleton loaders, error/retry, a11y, Spanish i18n, PWA install, station reviews + report-issue.

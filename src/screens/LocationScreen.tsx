@@ -124,7 +124,84 @@ export function LocationScreen() {
         </div>
 
         <LocationReviews locationId={id} />
+        <ReportIssue locationId={id} />
       </div>
+    </div>
+  );
+}
+
+const ISSUE_CATEGORIES: { key: string; label: string }[] = [
+  { key: 'broken_connector', label: 'Broken connector' },
+  { key: 'blocked', label: 'Blocked spot' },
+  { key: 'payment', label: 'Payment issue' },
+  { key: 'offline', label: 'Offline' },
+  { key: 'other', label: 'Other' },
+];
+
+function ReportIssue({ locationId }: { locationId: string }) {
+  const { client, driver } = usePhevnix();
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState('broken_connector');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  if (!driver) return null;
+
+  async function submit() {
+    setBusy(true);
+    setErr(null);
+    try {
+      await client.reportLocationIssue(locationId, { category, note: note.trim() || undefined });
+      setDone(true);
+      setOpen(false);
+      setNote('');
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('Could not save.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) return <Banner tone="volt">{t('Thanks — we’ve let the operator know.')}</Banner>;
+
+  return (
+    <div>
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="text-[12.5px] font-medium text-text-soft underline-offset-2 hover:underline">
+          ⚠︎ {t('Report an issue')}
+        </button>
+      ) : (
+        <Card className="space-y-3">
+          <p className="text-[14px] font-semibold">{t('Report an issue')}</p>
+          <div className="flex flex-wrap gap-2">
+            {ISSUE_CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setCategory(c.key)}
+                className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${category === c.key ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+              >
+                {t(c.label)}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={900}
+            rows={3}
+            placeholder={t('What’s wrong? (optional)')}
+            className="w-full resize-none rounded-xl border border-line bg-ink-soft px-3 py-2 text-[14px] outline-none placeholder:text-text-faint"
+          />
+          {err && <Banner tone="warn">{err}</Banner>}
+          <div className="flex gap-2">
+            <Button onClick={submit} loading={busy} className="h-10">{t('Send report')}</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="h-10">{t('Cancel')}</Button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

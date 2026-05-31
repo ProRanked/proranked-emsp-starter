@@ -252,6 +252,10 @@ export class PhevnixEmspClient {
     return this.request('POST', `/emsp/v1/locations/${id}/reviews`, { body: input });
   }
 
+  reportLocationIssue(id: string, input: { category: string; note?: string; chargerId?: string }): Promise<unknown> {
+    return this.request('POST', `/emsp/v1/locations/${id}/report`, { body: input });
+  }
+
   listChargers(query: { page?: number; pageSize?: number } = {}): Promise<unknown> {
     return this.request('GET', '/emsp/v1/chargers', { query });
   }

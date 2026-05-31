@@ -23,6 +23,7 @@ export function SessionScreen() {
   const [stopping, setStopping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const limitTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [goalKwh, setGoalKwh] = useState<number | null>(null);
 
   // Live power history for the charging curve. Sampled off the centrally-polled
   // session: append a point whenever delivered energy advances (a fresh poll),
@@ -90,6 +91,10 @@ export function SessionScreen() {
   const active = !!session;
   const peakKw = history.length ? Math.max(...history) : power;
   const avgKw = history.length ? history.reduce((a, b) => a + b, 0) / history.length : power;
+  // Charge goal → live ETA from current power (now that currentPowerKw is real).
+  const goalReached = goalKwh != null && kwh >= goalKwh;
+  const goalPct = goalKwh ? Math.min(100, (kwh / goalKwh) * 100) : 0;
+  const etaMin = goalKwh != null && power > 0.1 && !goalReached ? Math.ceil(((goalKwh - kwh) / power) * 60) : null;
 
   return (
     <div>
@@ -134,6 +139,42 @@ export function SessionScreen() {
               </div>
             </div>
             <PowerCurve points={history} emptyLabel={t('Gathering live power…')} />
+          </Card>
+        )}
+
+        {/* Charge goal — pick a target, watch the live time-to-target */}
+        {active && (
+          <Card>
+            <div className="mb-2.5 flex items-center justify-between">
+              <p className="text-[14px] font-semibold">{t('Charge goal')}</p>
+              {goalReached ? (
+                <span className="rounded-full bg-volt/15 px-2.5 py-1 text-[12px] font-bold text-volt">{t('Goal reached')} ✓</span>
+              ) : etaMin != null ? (
+                <span className="text-[12px] text-text-soft"><b className="text-text">~{etaMin}</b> {t('min left')}</span>
+              ) : null}
+            </div>
+            <div className="flex gap-2">
+              {([null, 5, 10, 20, 40] as const).map((g) => (
+                <button
+                  key={g ?? 'off'}
+                  onClick={() => setGoalKwh(g)}
+                  className={`flex-1 rounded-xl py-2 text-[12px] font-semibold transition ${goalKwh === g ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+                >
+                  {g == null ? t('Off') : g}
+                </button>
+              ))}
+            </div>
+            {goalKwh != null && (
+              <div className="mt-3">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+                  <div className="h-full rounded-full bg-volt transition-all" style={{ width: `${goalPct}%` }} />
+                </div>
+                <div className="mt-1.5 flex justify-between text-[11px] text-text-faint">
+                  <span>{kwh.toFixed(1)} kWh</span>
+                  <span>{t('Goal')} {goalKwh} kWh</span>
+                </div>
+              </div>
+            )}
           </Card>
         )}
 

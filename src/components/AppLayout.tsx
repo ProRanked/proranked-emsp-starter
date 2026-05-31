@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { MapIcon, ClockIcon, HeartIcon, UserIcon, ReceiptIcon } from './icons.tsx';
+import { WelcomeOverlay } from './WelcomeOverlay.tsx';
 
 const TABS = [
   { to: '/', label: 'Charge', Icon: MapIcon, end: true },
@@ -17,6 +18,7 @@ export function AppLayout() {
   return (
     <div className="phone-shell">
       <div className="phone-frame flex flex-col">
+        <WelcomeOverlay />
         <main className="no-scrollbar flex-1 overflow-y-auto pb-24">
           <Outlet />
         </main>

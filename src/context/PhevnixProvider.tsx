@@ -112,6 +112,23 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
   // surfaces a session it didn't start in-app (fresh login, reload, another device).
   const [activeSession, setActiveSession] = useState<ChargingSession | null>(null);
 
+  // Keep tabs in sync. When another tab rotates the refresh token (or logs out), adopt its latest
+  // tokens here instead of letting this tab later refresh with a now-stale token — which the backend
+  // would treat as reuse and revoke. One source of truth across tabs = far fewer spurious logouts.
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY) return;
+      if (!e.newValue) { client.clearSession(); setDriver(null); setActiveSession(null); return; }
+      try {
+        const s = JSON.parse(e.newValue) as PersistedSession;
+        client.restoreSession({ accessToken: s.accessToken, refreshToken: s.refreshToken, tokenUid: s.tokenUid });
+        if (s.driver) setDriver(s.driver);
+      } catch { /* ignore malformed session payloads */ }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [client]);
+
   // Find the live session, then enrich it from the detail endpoint. The session
   // *list* DTO is lean (no live power), but the *detail* DTO carries currentPowerKw,
   // maxPowerKw and the full cost breakdown — so "kW now" and the charging curve

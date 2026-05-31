@@ -8,6 +8,11 @@ import { PowerCurve } from '../components/PowerCurve.tsx';
 import { reportedSoc } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
+// Charging-speed slider bounds. Default to MAX so a session charges as fast as the charger allows
+// unless the driver deliberately dials it down — not a misleading half-speed default.
+const MIN_AMPS = 6;
+const MAX_AMPS = 32;
+
 export function SessionScreen() {
   const { client, activeSession: session, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
@@ -19,7 +24,7 @@ export function SessionScreen() {
   const chargerId = state.chargerId ?? session?.chargerId ?? sessionStorage.getItem('voltway.activeCharger') ?? '';
   const connectorNumber = state.connector ?? session?.connectorNumber ?? 1;
 
-  const [limit, setLimit] = useState(16);
+  const [limit, setLimit] = useState(MAX_AMPS);
   const [limitMsg, setLimitMsg] = useState<string | null>(null);
   const [stopping, setStopping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -256,8 +261,8 @@ export function SessionScreen() {
           </div>
           <input
             type="range"
-            min={6}
-            max={32}
+            min={MIN_AMPS}
+            max={MAX_AMPS}
             step={1}
             value={limit}
             onChange={(e) => changeLimit(Number(e.target.value))}

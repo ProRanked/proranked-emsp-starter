@@ -4,6 +4,7 @@ import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon, PowerIcon } from '../components/icons.tsx';
+import { PowerCurve } from '../components/PowerCurve.tsx';
 import { useT } from '../lib/i18n.tsx';
 
 export function SessionScreen() {
@@ -22,6 +23,24 @@ export function SessionScreen() {
   const [stopping, setStopping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const limitTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Live power history for the charging curve. Sampled off the centrally-polled
+  // session: append a point whenever delivered energy advances (a fresh poll),
+  // capped to a rolling window so the chart stays light.
+  const [history, setHistory] = useState<number[]>([]);
+  const lastEnergy = useRef<number>(-1);
+  useEffect(() => {
+    if (!session) {
+      setHistory([]);
+      lastEnergy.current = -1;
+      return;
+    }
+    const e = session.energyDeliveredKwh ?? 0;
+    if (e !== lastEnergy.current) {
+      lastEnergy.current = e;
+      setHistory((h) => [...h, session.currentPowerKw ?? 0].slice(-80));
+    }
+  }, [session]);
 
   // The active session is polled centrally by the provider; kick one immediate refresh
   // on mount so a just-started or just-opened session shows without a poll delay.
@@ -69,6 +88,8 @@ export function SessionScreen() {
   const power = session?.currentPowerKw ?? 0;
   const mins = session?.durationSeconds != null ? Math.floor(session.durationSeconds / 60) : 0;
   const active = !!session;
+  const peakKw = history.length ? Math.max(...history) : power;
+  const avgKw = history.length ? history.reduce((a, b) => a + b, 0) / history.length : power;
 
   return (
     <div>
@@ -101,6 +122,20 @@ export function SessionScreen() {
           <Card className="text-center"><p className="text-[18px] font-bold">{mins}</p><p className="text-[11px] text-text-soft">{t('minutes')}</p></Card>
           <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">{t('cost')}</p></Card>
         </div>
+
+        {/* Live charging power curve */}
+        {active && (
+          <Card>
+            <div className="mb-1 flex items-center justify-between">
+              <p className="text-[14px] font-semibold">{t('Charging power')}</p>
+              <div className="flex items-center gap-3 text-[11px] text-text-soft">
+                <span>{t('peak')} <b className="text-text">{peakKw.toFixed(1)}</b> kW</span>
+                <span>{t('avg')} <b className="text-text">{avgKw.toFixed(1)}</b> kW</span>
+              </div>
+            </div>
+            <PowerCurve points={history} emptyLabel={t('Gathering live power…')} />
+          </Card>
+        )}
 
         {/* Charging speed limit */}
         <Card>

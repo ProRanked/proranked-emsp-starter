@@ -73,6 +73,10 @@ const ES: Record<string, string> = {
   min: 'min',
   cost: 'costo',
   'Charging speed': 'Velocidad de carga',
+  'Charging power': 'Potencia de carga',
+  'Gathering live power…': 'Recopilando potencia en vivo…',
+  peak: 'máx.',
+  avg: 'prom.',
   'Eco · 6 A': 'Eco · 6 A',
   'Max · 32 A': 'Máx · 32 A',
   // Charger detail

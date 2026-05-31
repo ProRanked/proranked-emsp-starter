@@ -19,6 +19,7 @@ export function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
 
   // Load nearby locations for the current map center; fall back to the full list.
   useEffect(() => {
@@ -63,9 +64,9 @@ export function HomeScreen() {
     }
   }
 
-  const filtered = query
-    ? locations.filter((l) => `${l.name ?? ''} ${l.address ?? ''} ${l.city ?? ''}`.toLowerCase().includes(query.toLowerCase()))
-    : locations;
+  const filtered = locations
+    .filter((l) => (query ? `${l.name ?? ''} ${l.address ?? ''} ${l.city ?? ''}`.toLowerCase().includes(query.toLowerCase()) : true))
+    .filter((l) => (onlyAvailable ? (l.availableCount ?? 0) > 0 : true));
 
   return (
     <div>
@@ -120,6 +121,22 @@ export function HomeScreen() {
       {/* Live interactive station map */}
       <div className="px-5 pt-4">
         <LiveMap locations={filtered} origin={center} onSelect={(id) => navigate(`/location/${id}`)} />
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 px-5 pt-4">
+        {([['all', 'All'], ['available', 'Available now']] as const).map(([k, label]) => {
+          const active = (k === 'available') === onlyAvailable;
+          return (
+            <button
+              key={k}
+              onClick={() => setOnlyAvailable(k === 'available')}
+              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${active ? 'bg-volt text-ink' : 'border border-line text-text-soft'}`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* List */}

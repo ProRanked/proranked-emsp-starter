@@ -4,40 +4,29 @@ import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon, PowerIcon } from '../components/icons.tsx';
-import { asArray, type ChargingSession } from '../lib/types.ts';
 
 export function SessionScreen() {
-  const { client } = usePhevnix();
+  const { client, activeSession: session, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
   const nav = useLocation();
   const state = (nav.state ?? {}) as { sessionId?: string; chargerId?: string; connector?: number };
-  const chargerId = state.chargerId ?? sessionStorage.getItem('voltway.activeCharger') ?? '';
+  // Limit/stop need a charger + connector. Prefer the live session's own values so a
+  // RESUMED session (opened on fresh login, with no nav state) is still controllable.
+  const chargerId = state.chargerId ?? session?.chargerId ?? sessionStorage.getItem('voltway.activeCharger') ?? '';
+  const connectorNumber = state.connector ?? session?.connectorNumber ?? 1;
 
-  const [session, setSession] = useState<ChargingSession | null>(null);
   const [limit, setLimit] = useState(16);
   const [limitMsg, setLimitMsg] = useState<string | null>(null);
   const [stopping, setStopping] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const limitTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Poll for the driver's active session.
+  // The active session is polled centrally by the provider; kick one immediate refresh
+  // on mount so a just-started or just-opened session shows without a poll delay.
   useEffect(() => {
-    let alive = true;
-    const tick = async () => {
-      try {
-        const rows = asArray<ChargingSession>(await client.listSessions({ status: 'ACTIVE', pageSize: 1 }));
-        if (alive) setSession(rows[0] ?? null);
-      } catch {
-        /* ignore poll errors */
-      }
-    };
-    tick();
-    const iv = setInterval(tick, 5000);
-    return () => {
-      alive = false;
-      clearInterval(iv);
-    };
-  }, [client]);
+    refreshActiveSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function changeLimit(a: number) {
     setLimit(a);
@@ -46,7 +35,7 @@ export function SessionScreen() {
     if (!chargerId) return;
     limitTimer.current = setTimeout(async () => {
       try {
-        await client.setChargingLimit(chargerId, { connectorNumber: state.connector ?? 1, unit: 'A', limit: a });
+        await client.setChargingLimit(chargerId, { connectorNumber, unit: 'A', limit: a });
         setLimitMsg(`Limit set to ${a} A`);
       } catch (e) {
         setLimitMsg(e instanceof Error ? e.message : 'Could not set limit');
@@ -63,6 +52,7 @@ export function SessionScreen() {
     try {
       await client.stopCharging(session.id);
       sessionStorage.removeItem('voltway.activeCharger');
+      refreshActiveSession();
       navigate('/', { replace: true });
     } catch (e) {
       setNote(e instanceof Error ? e.message : 'Could not stop session');

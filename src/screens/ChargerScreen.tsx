@@ -19,8 +19,12 @@ interface ChargerDetail {
 
 export function ChargerScreen() {
   const { id = '' } = useParams();
-  const { client } = usePhevnix();
+  const { client, activeSession, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
+
+  // Does the driver already have a live session on THIS charger? If so, the page
+  // resumes it instead of offering a (doomed) second start on a busy connector.
+  const sessionHere = activeSession && activeSession.chargerId === id ? activeSession : null;
   const [connector, setConnector] = useState(1);
   const [busy, setBusy] = useState<'start' | 'reserve' | null>(null);
   const [msg, setMsg] = useState<{ tone: 'volt' | 'warn'; text: string } | null>(null);
@@ -38,6 +42,7 @@ export function ChargerScreen() {
     try {
       const res = (await client.startCharging({ chargerId: id, connectorNumber: connector })) as { id?: string };
       sessionStorage.setItem('voltway.activeCharger', id);
+      refreshActiveSession();
       navigate('/session', { state: { sessionId: res?.id, chargerId: id, connector } });
     } catch (e) {
       setMsg({ tone: 'warn', text: errText(e) });
@@ -118,15 +123,28 @@ export function ChargerScreen() {
             {msg && <Banner tone={msg.tone}>{msg.text}</Banner>}
 
             {/* Actions */}
-            <div className="space-y-2.5 pt-1">
-              <Button onClick={start} loading={busy === 'start'}>
-                <BoltIcon className="h-5 w-5" /> Start charging
-              </Button>
-              <Button variant="outline" onClick={reserve} loading={busy === 'reserve'}>
-                <ClockIcon className="h-5 w-5" /> Reserve for 15 min
-              </Button>
-            </div>
-            <p className="text-center text-[11px] text-text-faint">Billed to your Voltway account when the session ends.</p>
+            {sessionHere ? (
+              <div className="space-y-2.5 pt-1">
+                <Banner tone="volt">
+                  You're charging here now — {(sessionHere.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered.
+                </Banner>
+                <Button onClick={() => navigate('/session', { state: { sessionId: sessionHere.id, chargerId: id, connector: sessionHere.connectorNumber ?? connector } })}>
+                  <BoltIcon className="h-5 w-5" /> View live session
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2.5 pt-1">
+                  <Button onClick={start} loading={busy === 'start'}>
+                    <BoltIcon className="h-5 w-5" /> Start charging
+                  </Button>
+                  <Button variant="outline" onClick={reserve} loading={busy === 'reserve'}>
+                    <ClockIcon className="h-5 w-5" /> Reserve for 15 min
+                  </Button>
+                </div>
+                <p className="text-center text-[11px] text-text-faint">Billed to your Voltway account when the session ends.</p>
+              </>
+            )}
           </>
         )}
       </div>
@@ -136,6 +154,12 @@ export function ChargerScreen() {
 
 function errText(e: unknown): string {
   const m = e instanceof Error ? e.message : String(e);
-  if (/not available|UNKNOWN|INOPERATIVE/i.test(m)) return 'This charger is offline right now. Try another connector or site.';
+  // A busy/in-use connector is NOT the same as an offline charger — say so accurately.
+  if (/CHARGING|OCCUPIED|PREPARING|FINISHING|in use|SuspendedEV/i.test(m))
+    return 'This connector is in use right now. Try another connector or come back shortly.';
+  if (/UNKNOWN|INOPERATIVE|offline|unreachable|not connected/i.test(m))
+    return 'This charger is offline right now. Try another connector or site.';
+  if (/RESERVED/i.test(m)) return 'This connector is reserved right now. Try another connector.';
+  // Otherwise surface the API's own message — it's written for end users.
   return m;
 }

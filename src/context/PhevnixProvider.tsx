@@ -1,6 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { PhevnixEmspClient, type DriverSession } from '../lib/phevnix.ts';
-import type { Driver } from '../lib/types.ts';
+import { asArray, type ChargingSession, type Driver } from '../lib/types.ts';
 
 const STORAGE_KEY = 'voltway.session';
 
@@ -27,6 +27,14 @@ interface PhevnixContextValue {
   client: PhevnixEmspClient;
   driver: Driver | null;
   keyConfigured: boolean;
+  /**
+   * The driver's currently-running charging session, or null. Polled centrally so
+   * every screen (home banner, charger page, live session) reflects the same backend
+   * truth — including a session started on another device or before this app loaded.
+   */
+  activeSession: ChargingSession | null;
+  /** Re-fetch the active session immediately (call right after start/stop). */
+  refreshActiveSession: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (input: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
   logout: () => void;
@@ -63,6 +71,43 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
     return c;
   }, []);
 
+  // Centralized active-session truth. Polls while a driver is signed in so the app
+  // surfaces a session it didn't start in-app (fresh login, reload, another device).
+  const [activeSession, setActiveSession] = useState<ChargingSession | null>(null);
+
+  const refreshActiveSession = () => {
+    client
+      .listSessions({ status: 'ACTIVE', pageSize: 1 })
+      .then((r) => setActiveSession(asArray<ChargingSession>(r)[0] ?? null))
+      .catch(() => {
+        /* transient poll error — keep the last known value */
+      });
+  };
+
+  useEffect(() => {
+    if (!driver) {
+      setActiveSession(null);
+      return;
+    }
+    let alive = true;
+    const tick = () => {
+      client
+        .listSessions({ status: 'ACTIVE', pageSize: 1 })
+        .then((r) => {
+          if (alive) setActiveSession(asArray<ChargingSession>(r)[0] ?? null);
+        })
+        .catch(() => {
+          /* ignore transient poll errors */
+        });
+    };
+    tick();
+    const iv = setInterval(tick, 5000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [driver, client]);
+
   function persist(session: DriverSession) {
     const driverInfo: Driver = { ...session.driver, tokenUid: session.driver?.tokenUid ?? client.tokenUid };
     const payload: PersistedSession = {
@@ -79,12 +124,15 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
     client,
     driver,
     keyConfigured: API_KEY.length > 0,
+    activeSession,
+    refreshActiveSession,
     login: async (email, password) => persist(await client.login(email, password)),
     register: async (input) => persist(await client.register(input)),
     logout: () => {
       client.clearSession();
       localStorage.removeItem(STORAGE_KEY);
       setDriver(null);
+      setActiveSession(null);
     },
   };
 

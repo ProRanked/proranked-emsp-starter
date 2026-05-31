@@ -9,7 +9,7 @@ import { asArray, type LocationLite } from '../lib/types.ts';
 const ORIGIN = { lat: 18.4248, lng: -66.0758 };
 
 export function HomeScreen() {
-  const { client, driver } = usePhevnix();
+  const { client, driver, activeSession } = usePhevnix();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [locations, setLocations] = useState<LocationLite[]>([]);
@@ -59,6 +59,27 @@ export function HomeScreen() {
           />
         </div>
       </div>
+
+      {/* Active charging session — resume from anywhere in the app */}
+      {activeSession && (
+        <div className="px-5 pt-4">
+          <button
+            onClick={() => navigate('/session')}
+            className="flex w-full items-center gap-3.5 rounded-2xl border border-volt/40 bg-volt/10 p-3.5 text-left"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-volt/15 text-volt">
+              <BoltIcon className="h-6 w-6 animate-pulse-volt" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-bold text-volt">Charging in progress</p>
+              <p className="truncate text-[12.5px] text-text-soft">
+                {(activeSession.energyDeliveredKwh ?? 0).toFixed(1)} kWh delivered · tap to view &amp; stop
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-volt" />
+          </button>
+        </div>
+      )}
 
       {/* Faux map banner with nearby pins */}
       <div className="px-5 pt-4">

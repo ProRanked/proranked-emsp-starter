@@ -32,7 +32,7 @@ What the pros have that we don't yet:
 - **Phase 3 — Map filters + search + status pins**: filter by connector/speed/available-now; search-by-address (geocode); color pins by real-time availability (needs availability counts in the locations payload).
 - **Phase 4 — Richer station detail** 🔨 IN PROGRESS: ✅ real street-level mini-map, ✅ Get Directions deep link, ✅ "X of Y available now" summary, ✅ friendly connector names (Type 1/2, CCS, CHAdeMO). TODO: pricing breakdown, amenities/hours, per-connector live status.
 - **Phase 5 — Payments + notifications**: saved cards/wallet, payment history; notification preferences + charge-complete/idle push.
-- **Phase 6 — Vehicles + Favorites + Reservations UX**: enable the gated capabilities, polish the management flows.
+- **Phase 6 — Vehicles + Favorites + Reservations UX** 🔨 IN PROGRESS: ✅ Favorites enabled + working (Saved tab + heart-save on locations). TODO: Vehicles (needs Smartcar integration), reservations management polish.
 - **Phase 7 — Polish & trust** 🔨 IN PROGRESS: ✅ skeleton loaders (Home/Activity/Location), ✅ installable PWA (manifest + service worker + icon + Apple meta). TODO: onboarding, error/retry, a11y, Spanish i18n, station reviews + report-issue.
 
 Each phase that needs data the eMSP API doesn't expose yet becomes a backend task

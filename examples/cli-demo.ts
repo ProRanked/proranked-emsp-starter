@@ -80,16 +80,12 @@ async function main() {
     await step('Clear the charging limit', () => client.clearChargingLimit(chargerId), { allowFail: true });
   }
 
-  // 4. Driver account: notifications, vehicles, favorites ------------------
+  // 4. Driver account: notifications, favorites ----------------------------
   await step('Read notification preferences', () => client.getNotificationPreferences(), { allowFail: true });
   await step('Mute SMS, keep email', () =>
     client.updateNotificationPreferences({ smsEnabled: false, emailEnabled: true }), { allowFail: true });
 
-  // Vehicles / Favorites may be disabled per network (403 feature_disabled).
-  await step('List vehicles', () => client.listVehicles(), { allowFail: true });
-  await step('Add a vehicle', () =>
-    client.addVehicle({ make: 'Tesla', model: 'Model 3', year: 2024, batteryCapacityKwh: 60 }), { allowFail: true });
-
+  // Favorites may be disabled per network (403 feature_disabled).
   if (firstLocation?.id) {
     await step('Favorite the nearest location', () =>
       client.addFavorite({ targetType: 'location', targetId: firstLocation.id }), { allowFail: true });

@@ -372,19 +372,6 @@ export class PhevnixEmspClient {
     return this.request('PUT', '/emsp/v1/notifications/preferences', { body: prefs });
   }
 
-  // ── Vehicles (driver; capability may be disabled per network) ──────────
-
-  listVehicles(): Promise<unknown> {
-    return this.request('GET', '/emsp/v1/vehicles');
-  }
-
-  addVehicle(input: { make?: string; model?: string; year?: number; color?: string; vin?: string; licensePlate?: string; batteryCapacityKwh?: number }): Promise<unknown> {
-    return this.request('POST', '/emsp/v1/vehicles', { body: input });
-  }
-
-  removeVehicle(id: string): Promise<unknown> {
-    return this.request('DELETE', `/emsp/v1/vehicles/${id}`);
-  }
 
   // ── Favorites (driver; capability may be disabled per network) ─────────
 

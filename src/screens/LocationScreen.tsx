@@ -57,6 +57,25 @@ export function LocationScreen() {
           </div>
         )}
 
+        {/* Station photos — operator-uploaded images, when present (horizontal strip) */}
+        {l && (l.images?.length ?? 0) > 0 && (
+          <div className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5">
+            {l.images!.map((img, i) => {
+              const src = img.thumbnailUrl || img.url;
+              if (!src) return null;
+              return (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`${l.name ?? 'Charging site'} photo ${i + 1}`}
+                  loading="lazy"
+                  className="h-40 w-64 shrink-0 rounded-2xl border border-line object-cover"
+                />
+              );
+            })}
+          </div>
+        )}
+
         {/* Hero — real mini-map + directions when geocoded, else a branded fallback */}
         {l && l.latitude != null && l.longitude != null && !(Math.abs(l.latitude) < 0.01 && Math.abs(l.longitude) < 0.01) ? (
           <div className="space-y-3">

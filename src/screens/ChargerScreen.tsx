@@ -15,6 +15,7 @@ interface ChargerDetail {
   manufacturer?: string;
   model?: string;
   maxPowerKw?: number;
+  lastHeartbeat?: string;
   connectors?: { id?: string; connectorNumber?: number; status?: string; standard?: string; maxPowerKw?: number }[];
 }
 
@@ -22,7 +23,7 @@ export function ChargerScreen() {
   const { id = '' } = useParams();
   const { client, activeSession, refreshActiveSession } = usePhevnix();
   const navigate = useNavigate();
-  const { t } = useT();
+  const { t, lang } = useT();
 
   // Does the driver already have a live session on THIS charger? If so, the page
   // resumes it instead of offering a (doomed) second start on a busy connector.
@@ -94,6 +95,20 @@ export function ChargerScreen() {
                 </p>
               </Card>
             </div>
+
+            {/* Online recency — the trust signal drivers care about most */}
+            {(() => {
+              const seen = seenInfo(c?.lastHeartbeat, lang);
+              if (!seen) return null;
+              return (
+                <div className="flex items-center gap-2 text-[12.5px]">
+                  <span className={`h-2 w-2 rounded-full ${seen.online ? 'bg-volt' : 'bg-amber'}`} />
+                  <span className={seen.online ? 'text-text-soft' : 'text-amber'}>
+                    {seen.online ? `${t('Online')} · ${seen.rel}` : `${t('Last seen')} ${seen.rel}`}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Connector picker */}
             <div>
@@ -180,6 +195,21 @@ function PriceRow({ label, value }: { label: string; value: string }) {
       <span className="font-semibold">{value}</span>
     </div>
   );
+}
+
+/** Online-recency from the charger's last heartbeat — online if seen in the last 5 min. */
+function seenInfo(iso: string | undefined, lang: string): { online: boolean; rel: string } | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  const es = lang === 'es';
+  let rel: string;
+  if (s < 60) rel = es ? 'hace un momento' : 'just now';
+  else if (s < 3600) { const n = Math.floor(s / 60); rel = es ? `hace ${n} min` : `${n} min ago`; }
+  else if (s < 86400) { const n = Math.floor(s / 3600); rel = es ? `hace ${n} h` : `${n} h ago`; }
+  else { const n = Math.floor(s / 86400); rel = es ? `hace ${n} d` : `${n} d ago`; }
+  return { online: s < 300, rel };
 }
 
 /** Map raw OCPI/OCPP connector standards to friendly driver-facing names. */

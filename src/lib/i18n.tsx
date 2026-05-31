@@ -90,6 +90,8 @@ const ES: Record<string, string> = {
   'Energy rate': 'Tarifa de energía',
   Free: 'Gratis',
   'Choose a connector': 'Elige un conector',
+  Online: 'En línea',
+  'Last seen': 'Visto por última vez',
   Connector: 'Conector',
   'This charger is': 'Este cargador es',
   'Free to use': 'Gratis',

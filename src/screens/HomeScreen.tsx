@@ -26,6 +26,27 @@ export function HomeScreen() {
   const [connFilter, setConnFilter] = useState<string | null>(null);
   const [amenity, setAmenity] = useState<'parking' | 'wifi' | 'restrooms' | null>(null);
   const [sortBy, setSortBy] = useState<'distance' | 'available' | 'power' | 'rating'>('distance');
+  const [code, setCode] = useState('');
+  const [resolving, setResolving] = useState(false);
+
+  // Scan-to-charge: resolve a charger by the code printed on it / behind its QR (its uid or EVSE id)
+  // via GET /emsp/v1/chargers/{identifier}/info, then jump straight to that charger.
+  async function resolveCode() {
+    const c = code.trim();
+    if (!c) return;
+    setResolving(true); setError(null);
+    try {
+      // /info returns { chargerUuid, chargerUid, ... } — navigate by the GUID.
+      const info = (await client.getChargerInfo(c)) as { chargerUuid?: string; id?: string; chargerId?: string; uuid?: string } | null;
+      const id = info?.chargerUuid ?? info?.id ?? info?.chargerId ?? info?.uuid;
+      if (id) navigate(`/charger/${id}`);
+      else setError(t('No charger found for that code.'));
+    } catch {
+      setError(t('No charger found for that code.'));
+    } finally {
+      setResolving(false);
+    }
+  }
 
   // Connector categories present across the loaded sites (for filter chips).
   const categories = Array.from(
@@ -127,6 +148,23 @@ export function HomeScreen() {
           </span>
           <ChevronRight className="h-5 w-5 text-text-faint" />
         </button>
+
+        {/* Scan-to-charge: type the code on the charger (or behind its QR) to jump straight to it. */}
+        <div className="mt-3 flex h-12 items-center gap-2.5 rounded-2xl border border-line bg-ink-soft px-4">
+          <BoltIcon className="h-5 w-5 text-volt" />
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') resolveCode(); }}
+            placeholder={t('Scan or enter a charger code')}
+            aria-label="Scan or enter a charger code"
+            enterKeyHint="go"
+            className="h-full w-full bg-transparent text-[15px] outline-none placeholder:text-text-faint"
+          />
+          {resolving ? <Spinner className="h-4 w-4 text-volt" /> : code.trim() && (
+            <button onClick={resolveCode} className="text-[13px] font-semibold text-volt">{t('Go')}</button>
+          )}
+        </div>
       </div>
 
       {/* Live interactive station map */}

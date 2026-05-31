@@ -6,7 +6,7 @@ import { BoltIcon } from '../components/icons.tsx';
 import { useT } from '../lib/i18n.tsx';
 
 export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
-  const { login, register, keyConfigured } = usePhevnix();
+  const { login, register, keyConfigured, client } = usePhevnix();
   const navigate = useNavigate();
   const { t } = useT();
   const [email, setEmail] = useState('');
@@ -14,7 +14,20 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // POST /emsp/v1/auth/driver/forgot-password — always succeeds (no account enumeration).
+  async function forgot() {
+    setError(null); setNotice(null);
+    if (!email) { setError(t('Enter your email first.')); return; }
+    try {
+      await client.forgotPassword(email);
+      setNotice(t('If that email has an account, a reset link is on its way.'));
+    } catch {
+      setNotice(t('If that email has an account, a reset link is on its way.'));
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,6 +81,12 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
           )}
           <Field label={t('Email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com" />
           <Field label={t('Password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} placeholder="••••••••" />
+          {mode === 'login' && (
+            <div className="text-right">
+              <button type="button" onClick={forgot} className="text-[12px] font-medium text-volt">{t('Forgot password?')}</button>
+            </div>
+          )}
+          {notice && <Banner tone="volt">{notice}</Banner>}
           {error && <Banner tone="warn">{error}</Banner>}
           <div className="pt-1">
             <Button type="submit" loading={busy}>{mode === 'register' ? t('Create account') : t('Sign in')}</Button>

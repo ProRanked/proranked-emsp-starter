@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
-import { ChevronLeft, BoltIcon, PowerIcon, BatteryIcon } from '../components/icons.tsx';
+import { ChevronLeft, BoltIcon, PowerIcon, BatteryIcon, PlugIcon } from '../components/icons.tsx';
 import { PowerCurve } from '../components/PowerCurve.tsx';
 import { reportedSoc } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
@@ -106,6 +106,40 @@ export function SessionScreen() {
     } finally {
       setStopping(false);
     }
+  }
+
+  // Seed the slider from the charger's CURRENT effective limit (GET /smart-charging/{id}/limit).
+  useEffect(() => {
+    if (!chargerId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const eff = (await client.getChargingLimit(chargerId, connectorNumber, 'A')) as { limit?: number };
+        if (alive && typeof eff?.limit === 'number' && eff.limit >= MIN_AMPS && eff.limit <= MAX_AMPS) setLimit(eff.limit);
+      } catch { /* no limit set — keep the default (max) */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chargerId]);
+
+  async function clearLimit() {
+    if (!chargerId) return;
+    setLimit(MAX_AMPS); setLimitMsg(null);
+    try { await client.clearChargingLimit(chargerId, connectorNumber); setLimitMsg(t('Limit cleared — charging at full speed.')); }
+    catch (e) { setLimitMsg(e instanceof Error ? e.message : 'Could not clear limit'); }
+  }
+
+  async function unlockCable() {
+    if (!chargerId) return;
+    setNote(null);
+    try { await client.unlockConnector(chargerId, connectorNumber); setNote(t('Connector unlocked — you can unplug.')); }
+    catch (e) { setNote(e instanceof Error ? e.message : 'Could not unlock the connector'); }
+  }
+
+  async function refreshStatus() {
+    if (!chargerId) return;
+    try { await client.triggerMessage(chargerId, 'MeterValues', connectorNumber); refreshActiveSession(); }
+    catch { /* best-effort refresh */ }
   }
 
   const kwh = session?.energyDeliveredKwh ?? 0;
@@ -257,7 +291,10 @@ export function SessionScreen() {
         <Card>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[14px] font-semibold">{t('Charging speed')}</p>
-            <span className="rounded-full bg-volt/10 px-2.5 py-1 text-[12px] font-bold text-volt">{limit} A</span>
+            <div className="flex items-center gap-2.5">
+              {limit < MAX_AMPS && <button type="button" onClick={clearLimit} className="text-[12px] font-medium text-volt">{t('Clear')}</button>}
+              <span className="rounded-full bg-volt/10 px-2.5 py-1 text-[12px] font-bold text-volt">{limit} A</span>
+            </div>
           </div>
           <input
             type="range"
@@ -275,6 +312,12 @@ export function SessionScreen() {
         </Card>
 
         {note && <Banner tone="warn">{note}</Banner>}
+
+        {/* Charger self-service: unlock the cable + ask the charger to re-send live status. */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <Button variant="outline" onClick={unlockCable} disabled={!chargerId}><PlugIcon className="h-4 w-4" /> {t('Unlock cable')}</Button>
+          <Button variant="outline" onClick={refreshStatus} disabled={!chargerId}><BoltIcon className="h-4 w-4" /> {t('Refresh status')}</Button>
+        </div>
 
         <Button variant="danger" onClick={stop} loading={stopping} disabled={!active}>
           <PowerIcon className="h-5 w-5" /> {t('Stop charging')}

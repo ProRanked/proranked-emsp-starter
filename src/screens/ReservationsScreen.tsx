@@ -8,12 +8,27 @@ import { useT } from '../lib/i18n.tsx';
 
 interface Sched { id: string; connectorNumber?: number; scheduledTime?: string; status?: string; statusReason?: string }
 
+interface ReservationDetail { chargerId?: string; idTag?: string; createdAt?: string; statusReason?: string }
+
 export function ReservationsScreen() {
   const { client } = usePhevnix();
   const { t } = useT();
   const [cancelling, setCancelling] = useState<string | null>(null);
+  // GET /emsp/v1/reservations/{id} — lazily fetched the first time a card is expanded.
+  const [detail, setDetail] = useState<Record<string, ReservationDetail | 'loading'>>({});
   const list = useAsync(async () => asArray<Reservation>(await client.listReservations({ pageSize: 50 })), []);
   const sched = useAsync(async () => asArray<Sched>(await client.listScheduledCharges()), []);
+
+  async function toggleDetail(id: string) {
+    if (detail[id]) { setDetail((d) => { const { [id]: _, ...rest } = d; return rest; }); return; }
+    setDetail((d) => ({ ...d, [id]: 'loading' }));
+    try {
+      const r = (await client.getReservation(id)) as ReservationDetail;
+      setDetail((d) => ({ ...d, [id]: r }));
+    } catch {
+      setDetail((d) => { const { [id]: _, ...rest } = d; return rest; });
+    }
+  }
 
   async function cancel(id: string) {
     setCancelling(id);
@@ -83,11 +98,21 @@ export function ReservationsScreen() {
               </div>
               <StatusPill status={r.status} />
             </div>
-            {active(r) && (
-              <div className="mt-3">
-                <Button variant="outline" loading={cancelling === r.id} onClick={() => cancel(r.id)} className="h-10">{t('Cancel reservation')}</Button>
+            {detail[r.id] && detail[r.id] !== 'loading' && (
+              <div className="mt-3 space-y-1 border-t border-line pt-3 text-[12px] text-text-soft">
+                {(detail[r.id] as ReservationDetail).chargerId && <p>{t('Charger')} <span className="font-mono text-text">{(detail[r.id] as ReservationDetail).chargerId}</span></p>}
+                {(detail[r.id] as ReservationDetail).createdAt && <p>{t('Reserved')} {new Date((detail[r.id] as ReservationDetail).createdAt!).toLocaleString()}</p>}
+                {(detail[r.id] as ReservationDetail).statusReason && <p className="text-rose">{(detail[r.id] as ReservationDetail).statusReason}</p>}
               </div>
             )}
+            <div className="mt-3 flex gap-2">
+              <Button variant="ghost" onClick={() => toggleDetail(r.id)} loading={detail[r.id] === 'loading'} className="h-10">
+                {detail[r.id] && detail[r.id] !== 'loading' ? t('Hide details') : t('View details')}
+              </Button>
+              {active(r) && (
+                <Button variant="outline" loading={cancelling === r.id} onClick={() => cancel(r.id)} className="h-10">{t('Cancel reservation')}</Button>
+              )}
+            </div>
           </Card>
         ))}
       </div>

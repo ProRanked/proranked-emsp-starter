@@ -14,10 +14,15 @@ export function AccountScreen() {
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
 
+  // GET /emsp/v1/auth/driver/me — re-fetch the live profile (and validate the token) on mount;
+  // fall back to the driver captured at login while it loads or if the network's profile read is off.
+  const profile = useAsync(() => client.me() as Promise<{ firstName?: string; lastName?: string; email?: string; tokenUid?: string; phone?: string; createdAt?: string } | null>, []);
   const prefs = useAsync(() => client.getNotificationPreferences() as Promise<NotificationPreferences>, []);
   const pay = useAsync(() => client.getPaymentConfig() as Promise<PaymentConfig>, []);
   const sessions = useAsync(async () => asArray<ChargingSession>(await client.listSessions({ pageSize: 100 })), []);
   const [local, setLocal] = useState<Partial<NotificationPreferences['channels']> & Record<string, boolean>>({});
+
+  const me = { ...driver, ...(profile.data ?? {}) };
 
   const sList = sessions.data ?? [];
   const totalKwh = sList.reduce((s, x) => s + (x.energyDeliveredKwh ?? 0), 0);
@@ -44,7 +49,7 @@ export function AccountScreen() {
     }
   }
 
-  const initials = `${driver?.firstName?.[0] ?? ''}${driver?.lastName?.[0] ?? ''}`.toUpperCase() || 'V';
+  const initials = `${me.firstName?.[0] ?? ''}${me.lastName?.[0] ?? ''}`.toUpperCase() || 'V';
 
   return (
     <div>
@@ -54,8 +59,8 @@ export function AccountScreen() {
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-volt text-[22px] font-extrabold text-ink">{initials}</div>
           <div className="min-w-0">
-            <p className="truncate text-[18px] font-bold">{driver?.firstName} {driver?.lastName}</p>
-            <p className="truncate text-[13px] text-text-soft">{driver?.email}</p>
+            <p className="truncate text-[18px] font-bold">{me.firstName} {me.lastName}</p>
+            <p className="truncate text-[13px] text-text-soft">{me.email}</p>
           </div>
         </div>
 
@@ -64,7 +69,7 @@ export function AccountScreen() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[12px] text-text-soft">{t('Your charge tag (RFID)')}</p>
-              <p className="font-mono text-[15px] font-bold tracking-[0.15em]">{driver?.tokenUid ?? '—'}</p>
+              <p className="font-mono text-[15px] font-bold tracking-[0.15em]">{me.tokenUid ?? driver?.tokenUid ?? '—'}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-volt/10 text-volt"><BoltIcon className="h-5 w-5" /></div>
           </div>

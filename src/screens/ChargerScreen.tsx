@@ -39,6 +39,29 @@ export function ChargerScreen() {
   const charger = useAsync(() => client.getCharger(id) as Promise<ChargerDetail>, [id]);
   const tariffs = useAsync(async () => asArray<Tariff>(await client.listTariffs({ activeOnly: true, pageSize: 1 })), []);
 
+  // Pre-charge cost preview: POST /emsp/v1/pricing/calculate for a representative 20 kWh / 1 h charge.
+  const tariffId = tariffs.data?.[0]?.id;
+  const tariffFree = tariffs.data?.[0]?.isFree;
+  const estimate = useAsync(
+    async () => (tariffId && !tariffFree
+      ? (client.estimateCost({ tariffId, energyKwh: 20, durationMinutes: 60 }) as Promise<{ total?: number; cost?: number; currency?: string }>)
+      : null),
+    [tariffId, tariffFree],
+  );
+
+  const [resetting, setResetting] = useState(false);
+  async function resetCharger() {
+    setResetting(true); setMsg(null);
+    try {
+      await client.resetCharger(id, 'Soft');
+      setMsg({ tone: 'volt', text: t('Reset sent — the charger should reconnect shortly.') });
+    } catch (e) {
+      setMsg({ tone: 'warn', text: errText(e, t) });
+    } finally {
+      setResetting(false);
+    }
+  }
+
   const c = charger.data;
   const conns = c?.connectors?.length ? c.connectors : [{ connectorNumber: 1, status: c?.status }];
   const tariff = tariffs.data?.[0];
@@ -184,6 +207,12 @@ export function ChargerScreen() {
                       {tariff.timeRate != null && tariff.timeRate > 0 && <PriceRow label={t('Time')} value={`${money(tariff.timeRate, tariff.currency)} / min`} />}
                       {tariff.sessionFee != null && tariff.sessionFee > 0 && <PriceRow label={t('Session fee')} value={money(tariff.sessionFee, tariff.currency)} />}
                       {tariff.idleRate != null && tariff.idleRate > 0 && <PriceRow label={t('Idle fee')} value={`${money(tariff.idleRate, tariff.currency)} / min`} />}
+                      {(estimate.data?.total ?? estimate.data?.cost) != null && (
+                        <>
+                          <div className="my-1 border-t border-line" />
+                          <PriceRow label={t('Est. 20 kWh · 1 h')} value={money((estimate.data!.total ?? estimate.data!.cost)!, estimate.data!.currency ?? tariff.currency)} />
+                        </>
+                      )}
                     </>
                   )}
                 </Card>
@@ -205,7 +234,12 @@ export function ChargerScreen() {
             ) : (
               <>
                 {!online && (
-                  <Banner tone="warn">{t('This charger is offline right now — it can’t start a session. Try another charger or site.')}</Banner>
+                  <Banner tone="warn">
+                    {t('This charger is offline right now — it can’t start a session. Try another charger or site.')}
+                    <button type="button" onClick={resetCharger} disabled={resetting} className="mt-1.5 block text-[12px] font-semibold text-volt underline disabled:opacity-50">
+                      {resetting ? t('Sending reset…') : t('Try a remote reset')}
+                    </button>
+                  </Banner>
                 )}
                 <div className="space-y-2.5 pt-1">
                   <Button onClick={start} loading={busy === 'start'} disabled={!online}>

@@ -103,6 +103,17 @@ export interface ChargingSession {
   currency?: string;
 }
 
+/**
+ * The session's live EV battery State-of-Charge, or null when it shouldn't be shown.
+ * Many chargers (most AC/Level-2 stations) never send the OCPP SoC measurand, and some send a
+ * 0 placeholder — in both cases there's no real reading, so the whole battery UI must stay hidden
+ * rather than show a misleading "0%". Treat only a present, positive value as a real reading.
+ */
+export function reportedSoc(s?: { currentSocPercent?: number } | null): number | null {
+  const v = s?.currentSocPercent;
+  return typeof v === 'number' && v > 0 ? v : null;
+}
+
 /** Full session detail (GET /charging/sessions/:id) — itemized for the receipt. */
 export interface ChargingSessionDetail extends ChargingSession {
   authMethod?: string;

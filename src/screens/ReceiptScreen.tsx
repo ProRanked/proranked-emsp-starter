@@ -4,7 +4,7 @@ import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, Spinner, Banner, StatusPill, Button, useAsync, money } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon, ReceiptIcon } from '../components/icons.tsx';
-import type { ChargingSessionDetail } from '../lib/types.ts';
+import { reportedSoc, type ChargingSessionDetail } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
 /** Itemized receipt for one session — the trust artifact every pro charging app has. */
@@ -87,7 +87,7 @@ export function ReceiptScreen() {
             <Card className="space-y-2">
               {start && <Row label={t('Started')} value={start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} />}
               {end && <Row label={t('Ended')} value={end.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} />}
-              {s.currentSocPercent != null && <Row label={t('Battery at end')} value={`${Math.round(s.currentSocPercent)}%`} />}
+              {reportedSoc(s) != null && <Row label={t('Battery at end')} value={`${Math.round(reportedSoc(s)!)}%`} />}
               <Row label={t('Charger')} value={s.chargerUid ?? '—'} />
               {s.connectorNumber != null && <Row label={t('Connector')} value={`#${s.connectorNumber}`} />}
               {s.authMethod && <Row label={t('Authorized via')} value={s.authMethod} />}

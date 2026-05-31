@@ -5,6 +5,7 @@ import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
 import { ChevronLeft, BoltIcon, PowerIcon, BatteryIcon } from '../components/icons.tsx';
 import { PowerCurve } from '../components/PowerCurve.tsx';
+import { reportedSoc } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
 export function SessionScreen() {
@@ -55,7 +56,7 @@ export function SessionScreen() {
 
   // Charge limit: once the live battery SoC reaches the chosen target, stop the session
   // automatically (exactly once). Opt-in and only armed when the charger reports SoC.
-  const socNow = session?.currentSocPercent;
+  const socNow = reportedSoc(session);
   useEffect(() => {
     if (!session) { autoStopped.current = false; return; }
     if (socLimit == null || socNow == null || autoStopped.current) return;
@@ -104,7 +105,7 @@ export function SessionScreen() {
 
   const kwh = session?.energyDeliveredKwh ?? 0;
   const power = session?.currentPowerKw ?? 0;
-  const soc = session?.currentSocPercent;
+  const soc = reportedSoc(session);
   const mins = session?.durationSeconds != null ? Math.floor(session.durationSeconds / 60) : 0;
   const active = !!session;
   const peakKw = history.length ? Math.max(...history) : power;

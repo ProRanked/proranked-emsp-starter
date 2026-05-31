@@ -75,10 +75,23 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
   // surfaces a session it didn't start in-app (fresh login, reload, another device).
   const [activeSession, setActiveSession] = useState<ChargingSession | null>(null);
 
+  // Find the live session, then enrich it from the detail endpoint. The session
+  // *list* DTO is lean (no live power), but the *detail* DTO carries currentPowerKw,
+  // maxPowerKw and the full cost breakdown — so "kW now" and the charging curve
+  // reflect real charging instead of reading zero.
+  const fetchActiveSession = async (): Promise<ChargingSession | null> => {
+    const head = asArray<ChargingSession>(await client.listSessions({ status: 'ACTIVE', pageSize: 1 }))[0];
+    if (!head?.id) return null;
+    try {
+      return (await client.getSession(head.id)) as ChargingSession;
+    } catch {
+      return head; // detail fetch failed — fall back to the list row
+    }
+  };
+
   const refreshActiveSession = () => {
-    client
-      .listSessions({ status: 'ACTIVE', pageSize: 1 })
-      .then((r) => setActiveSession(asArray<ChargingSession>(r)[0] ?? null))
+    fetchActiveSession()
+      .then(setActiveSession)
       .catch(() => {
         /* transient poll error — keep the last known value */
       });
@@ -91,10 +104,9 @@ export function PhevnixProvider({ children }: { children: ReactNode }) {
     }
     let alive = true;
     const tick = () => {
-      client
-        .listSessions({ status: 'ACTIVE', pageSize: 1 })
-        .then((r) => {
-          if (alive) setActiveSession(asArray<ChargingSession>(r)[0] ?? null);
+      fetchActiveSession()
+        .then((s) => {
+          if (alive) setActiveSession(s);
         })
         .catch(() => {
           /* ignore transient poll errors */

@@ -120,7 +120,7 @@ export function SessionScreen() {
         <div className="grid grid-cols-3 gap-3">
           <Card className="text-center"><p className="text-[18px] font-bold">{power.toFixed(1)}</p><p className="text-[11px] text-text-soft">{t('kW now')}</p></Card>
           <Card className="text-center"><p className="text-[18px] font-bold">{mins}</p><p className="text-[11px] text-text-soft">{t('minutes')}</p></Card>
-          <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">{t('cost')}</p></Card>
+          <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.total ?? session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">{t('cost')}</p></Card>
         </div>
 
         {/* Live charging power curve */}

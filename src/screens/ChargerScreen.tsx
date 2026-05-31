@@ -86,12 +86,13 @@ export function ChargerScreen() {
     }
   }
 
-  // Default the picker to ~1 hour out, formatted for <input type="datetime-local">.
-  function defaultSchedAt() {
-    const d = new Date(Date.now() + 60 * 60 * 1000);
+  const fmtLocal = (d: Date) => {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
+  };
+  // Default the picker to ~1 hour out; allow anything from now onward.
+  function defaultSchedAt() { return fmtLocal(new Date(Date.now() + 60 * 60 * 1000)); }
+  function nowLocal() { return fmtLocal(new Date()); }
 
   return (
     <div>
@@ -210,7 +211,7 @@ export function ChargerScreen() {
                       <input
                         type="datetime-local"
                         value={schedAt || defaultSchedAt()}
-                        min={defaultSchedAt()}
+                        min={nowLocal()}
                         onChange={(e) => setSchedAt(e.target.value)}
                         aria-label={t('Start time')}
                         className="h-11 w-full rounded-xl border border-line bg-ink-soft px-3 text-[14px] outline-none"

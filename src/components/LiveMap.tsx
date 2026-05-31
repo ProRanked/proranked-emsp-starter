@@ -23,11 +23,17 @@ export function LiveMap({
   origin,
   onSelect,
   height = 320,
+  showUser = true,
+  interactive = true,
 }: {
   locations: LocationLite[];
   origin: { lat: number; lng: number };
   onSelect: (id: string) => void;
   height?: number;
+  /** Show the "you are here" dot. Off for single-station detail mini-maps. */
+  showUser?: boolean;
+  /** Allow pan/zoom. Off for a static detail mini-map. */
+  interactive?: boolean;
 }) {
   // Valid coords only. Reject null AND the (0,0) "null island" that ungeocoded
   // rows default to, so one bad row can't zoom the whole map out to the ocean.
@@ -43,6 +49,10 @@ export function LiveMap({
         zoom={12}
         zoomControl={false}
         attributionControl={false}
+        dragging={interactive}
+        scrollWheelZoom={interactive}
+        doubleClickZoom={interactive}
+        touchZoom={interactive}
         style={{ height: '100%', width: '100%', background: '#0b0f14' }}
       >
         {/* Dark-tinted basemap to match the app's dark theme */}
@@ -52,11 +62,13 @@ export function LiveMap({
         />
 
         {/* "You are here" */}
-        <CircleMarker
-          center={[origin.lat, origin.lng]}
-          radius={7}
-          pathOptions={{ color: '#2EE6A6', fillColor: '#2EE6A6', fillOpacity: 1, weight: 3, opacity: 0.35 }}
-        />
+        {showUser && (
+          <CircleMarker
+            center={[origin.lat, origin.lng]}
+            radius={7}
+            pathOptions={{ color: '#2EE6A6', fillColor: '#2EE6A6', fillOpacity: 1, weight: 3, opacity: 0.35 }}
+          />
+        )}
 
         {pins.map((loc) => (
           <Marker key={loc.id} position={[loc.latitude!, loc.longitude!]} icon={pinIcon(loc.chargerCount)}>
@@ -83,7 +95,7 @@ export function LiveMap({
           </Marker>
         ))}
 
-        <FitBounds pins={pins} origin={origin} />
+        <FitBounds pins={pins} origin={origin} showUser={showUser} />
       </MapContainer>
     </div>
   );
@@ -106,15 +118,19 @@ function pinIcon(count?: number) {
   return L.divIcon({ html, className: '', iconSize: [34, 34], iconAnchor: [17, 32], popupAnchor: [0, -30] });
 }
 
-/** Auto-fit the viewport to all visible pins (plus the user origin). */
-function FitBounds({ pins, origin }: { pins: LocationLite[]; origin: { lat: number; lng: number } }) {
+/** Auto-fit the viewport to all visible pins (plus the user origin when shown). */
+function FitBounds({ pins, origin, showUser }: { pins: LocationLite[]; origin: { lat: number; lng: number }; showUser: boolean }) {
   const map = useMap();
   useEffect(() => {
     const pts: [number, number][] = pins.map((p) => [p.latitude!, p.longitude!]);
-    pts.push([origin.lat, origin.lng]);
-    if (pts.length > 1) {
+    if (showUser) pts.push([origin.lat, origin.lng]);
+    if (pts.length === 1) {
+      map.setView(pts[0], 15, { animate: false });
+    } else if (pts.length > 1) {
       map.fitBounds(L.latLngBounds(pts).pad(0.25), { animate: false });
+    } else {
+      map.setView([origin.lat, origin.lng], 12, { animate: false });
     }
-  }, [map, pins, origin]);
+  }, [map, pins, origin, showUser]);
   return null;
 }

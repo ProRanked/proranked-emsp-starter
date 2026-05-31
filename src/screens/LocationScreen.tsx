@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
-import { Card, EmptyState, Spinner, StatusPill, Banner, useAsync } from '../components/ui.tsx';
+import { Card, EmptyState, Spinner, StatusPill, Banner, Button, useAsync } from '../components/ui.tsx';
 import { ChevronLeft, HeartIcon, PlugIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
+import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type ChargerLite, type LocationLite } from '../lib/types.ts';
 
 export function LocationScreen() {
@@ -45,14 +46,26 @@ export function LocationScreen() {
       <div className="space-y-5 px-5 py-5">
         {saveMsg && <Banner tone="warn">{saveMsg}</Banner>}
 
-        {/* Hero */}
-        <div className="relative h-40 overflow-hidden rounded-3xl border border-line bg-card-2">
-          <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_30%_-10%,rgba(46,230,166,0.20),transparent_55%)]" />
-          <div className="absolute bottom-4 left-4 flex items-center gap-2 text-text-soft">
-            <PinIcon className="h-5 w-5 text-volt" />
-            <span className="text-[13px]">{l?.city ?? 'Location'}{l?.state ? `, ${l.state}` : ''}</span>
+        {/* Hero — real mini-map + directions when geocoded, else a branded fallback */}
+        {l && l.latitude != null && l.longitude != null && !(Math.abs(l.latitude) < 0.01 && Math.abs(l.longitude) < 0.01) ? (
+          <div className="space-y-3">
+            <LiveMap locations={[l]} origin={{ lat: l.latitude, lng: l.longitude }} onSelect={() => {}} showUser={false} interactive={false} height={170} />
+            <Button
+              variant="outline"
+              onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${l.latitude},${l.longitude}`, '_blank', 'noopener')}
+            >
+              <PinIcon className="h-5 w-5" /> Get directions
+            </Button>
           </div>
-        </div>
+        ) : (
+          <div className="relative h-40 overflow-hidden rounded-3xl border border-line bg-card-2">
+            <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_30%_-10%,rgba(46,230,166,0.20),transparent_55%)]" />
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-text-soft">
+              <PinIcon className="h-5 w-5 text-volt" />
+              <span className="text-[13px]">{l?.city ?? 'Location'}{l?.state ? `, ${l.state}` : ''}</span>
+            </div>
+          </div>
+        )}
 
         <div>
           <h2 className="mb-3 text-[15px] font-bold">Chargers at this site</h2>

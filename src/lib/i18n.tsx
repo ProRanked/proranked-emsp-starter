@@ -132,6 +132,8 @@ const ES: Record<string, string> = {
   Reviews: 'Reseñas',
   reviews: 'reseñas',
   review: 'reseña',
+  'Show all': 'Ver todos',
+  chargers: 'cargadores',
   'No reviews yet — be the first to rate this site.': 'Aún no hay reseñas — sé el primero en calificar este sitio.',
   'Write a review': 'Escribir una reseña',
   'Edit your review': 'Editar tu reseña',

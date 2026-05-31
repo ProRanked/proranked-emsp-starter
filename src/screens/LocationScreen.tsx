@@ -15,6 +15,7 @@ export function LocationScreen() {
   const { t } = useT();
   const [saved, setSaved] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [showAllChargers, setShowAllChargers] = useState(false);
 
   const loc = useAsync(() => client.getLocation(id) as Promise<LocationLite>, [id]);
   const chargers = useAsync(async () => asArray<ChargerLite>(await client.getLocationChargers(id)), [id]);
@@ -134,7 +135,7 @@ export function LocationScreen() {
             <EmptyState icon={<PlugIcon className="h-9 w-9" />} title={t('No chargers listed')} />
           )}
           <div className="space-y-3">
-            {chargers.data?.map((c) => (
+            {(showAllChargers ? chargers.data : chargers.data?.slice(0, 8))?.map((c) => (
               <Card key={c.id} onClick={() => navigate(`/charger/${c.id}`)}>
                 <div className="flex items-center gap-3.5">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-card-2 text-volt">
@@ -150,6 +151,12 @@ export function LocationScreen() {
               </Card>
             ))}
           </div>
+          {/* Keep long sites scannable — collapse the charger list past 8 so reviews/amenities stay reachable. */}
+          {!showAllChargers && (chargers.data?.length ?? 0) > 8 && (
+            <button onClick={() => setShowAllChargers(true)} className="mt-3 w-full rounded-2xl border border-line py-2.5 text-[13px] font-semibold text-text-soft">
+              {t('Show all')} {chargers.data!.length} {t('chargers')}
+            </button>
+          )}
         </div>
 
         <LocationReviews locationId={id} />

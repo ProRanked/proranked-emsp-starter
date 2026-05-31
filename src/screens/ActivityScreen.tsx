@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Card, EmptyState, SkeletonList, StatusPill, ErrorState, useAsync, money } from '../components/ui.tsx';
-import { BoltIcon, ReceiptIcon, ChevronRight } from '../components/icons.tsx';
+import { BoltIcon, ReceiptIcon, ChevronRight, LeafIcon } from '../components/icons.tsx';
 import { asArray, type ChargingSession } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
@@ -42,6 +42,20 @@ export function ActivityScreen() {
             <Card className="text-center"><p className="text-[18px] font-bold">{totalKwh.toFixed(1)}</p><p className="text-[11px] text-text-soft">{t('kWh total')}</p></Card>
             <Card className="text-center"><p className="text-[18px] font-bold">{money(totalSpent, currency)}</p><p className="text-[11px] text-text-soft">{t('spent')}</p></Card>
           </div>
+        )}
+
+        {/* Insights entry */}
+        {sessions.length > 0 && (
+          <Card onClick={() => navigate('/insights')} className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-volt/10 text-volt"><LeafIcon className="h-5 w-5" /></div>
+              <div>
+                <p className="text-[14px] font-semibold">{t('Charging insights')}</p>
+                <p className="text-[12px] text-text-soft">{t('CO₂ avoided, trends & top stations')}</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-text-faint" />
+          </Card>
         )}
 
         {sessions.map((s) => {

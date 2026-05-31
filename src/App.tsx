@@ -8,6 +8,7 @@ import { LocationScreen } from './screens/LocationScreen.tsx';
 import { ChargerScreen } from './screens/ChargerScreen.tsx';
 import { SessionScreen } from './screens/SessionScreen.tsx';
 import { ActivityScreen } from './screens/ActivityScreen.tsx';
+import { InsightsScreen } from './screens/InsightsScreen.tsx';
 import { ReceiptScreen } from './screens/ReceiptScreen.tsx';
 import { ReservationsScreen } from './screens/ReservationsScreen.tsx';
 import { FavoritesScreen } from './screens/FavoritesScreen.tsx';
@@ -38,6 +39,7 @@ export function App() {
         <Route path="/charger/:id" element={<ChargerScreen />} />
         <Route path="/session" element={<SessionScreen />} />
         <Route path="/activity" element={<ActivityScreen />} />
+        <Route path="/insights" element={<InsightsScreen />} />
         <Route path="/activity/:id" element={<ReceiptScreen />} />
         <Route path="/reservations" element={<ReservationsScreen />} />
         <Route path="/favorites" element={<FavoritesScreen />} />

@@ -6,6 +6,13 @@ const base = (p: I) => ({ width: 24, height: 24, viewBox: '0 0 24 24', fill: 'no
 export const BoltIcon = (p: I) => (
   <svg {...base(p)}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" fill="currentColor" stroke="none" /></svg>
 );
+export const BatteryIcon = (p: I) => (
+  <svg {...base(p)}>
+    <rect x="2" y="7" width="16" height="10" rx="2.5" />
+    <path d="M21 10.5v3" />
+    <path d="M10.5 9 8 12.5h3L8.5 16" fill="none" />
+  </svg>
+);
 export const PinIcon = (p: I) => (
   <svg {...base(p)}><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
 );

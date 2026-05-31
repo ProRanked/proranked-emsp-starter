@@ -95,6 +95,8 @@ export interface ChargingSession {
   endTime?: string;
   energyDeliveredKwh?: number;
   currentPowerKw?: number;
+  /** Live EV battery State-of-Charge (0-100%), when the charger reports the OCPP SoC measurand. */
+  currentSocPercent?: number;
   durationSeconds?: number;
   cost?: number;
   total?: number;

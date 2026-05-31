@@ -42,6 +42,7 @@ export function AppLayout() {
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-bold text-volt">{t('Charging')}</span>
               <span className="block truncate text-[11.5px] text-text-soft">
+                {activeSession.currentSocPercent != null && `🔋 ${Math.round(activeSession.currentSocPercent)}% · `}
                 {(activeSession.energyDeliveredKwh ?? 0).toFixed(1)} kWh
                 {(activeSession.currentPowerKw ?? 0) > 0 && ` · ${(activeSession.currentPowerKw ?? 0).toFixed(1)} kW`}
                 {` · ${money(activeSession.total ?? activeSession.cost ?? 0, activeSession.currency)}`}

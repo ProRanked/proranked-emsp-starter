@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Banner, money } from '../components/ui.tsx';
-import { ChevronLeft, BoltIcon, PowerIcon } from '../components/icons.tsx';
+import { ChevronLeft, BoltIcon, PowerIcon, BatteryIcon } from '../components/icons.tsx';
 import { PowerCurve } from '../components/PowerCurve.tsx';
 import { useT } from '../lib/i18n.tsx';
 
@@ -87,6 +87,7 @@ export function SessionScreen() {
 
   const kwh = session?.energyDeliveredKwh ?? 0;
   const power = session?.currentPowerKw ?? 0;
+  const soc = session?.currentSocPercent;
   const mins = session?.durationSeconds != null ? Math.floor(session.durationSeconds / 60) : 0;
   const active = !!session;
   const peakKw = history.length ? Math.max(...history) : power;
@@ -116,6 +117,27 @@ export function SessionScreen() {
             <p className="text-[13px] text-text-soft">{t('kWh delivered')}</p>
           </div>
         </div>
+
+        {/* Live EV battery — only when the charger reports the OCPP SoC measurand */}
+        {active && soc != null && (
+          <Card>
+            <div className="mb-2 flex items-end justify-between">
+              <p className="flex items-center gap-2 text-[14px] font-semibold">
+                <BatteryIcon className="h-5 w-5 text-volt" /> {t('Battery')}
+              </p>
+              <p className="text-[26px] font-extrabold leading-none text-volt">{Math.round(soc)}<span className="text-[15px]">%</span></p>
+            </div>
+            <div className="h-3.5 w-full overflow-hidden rounded-full bg-card-2">
+              <div
+                className="h-full rounded-full bg-volt transition-[width] duration-700"
+                style={{ width: `${Math.max(3, Math.min(100, soc))}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-text-soft">
+              {soc >= 80 ? t('Nearly full — charging may slow to protect the battery.') : t('Reported live by the charger.')}
+            </p>
+          </Card>
+        )}
 
         {!active && (
           <Banner tone="info">{t('No active session. Start one from a charger — your live energy, power, and cost will appear here.')}</Banner>

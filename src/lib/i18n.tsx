@@ -84,6 +84,10 @@ const ES: Record<string, string> = {
   'No active session. Start one from a charger — your live energy, power, and cost will appear here.':
     'No hay sesión activa. Inicia una desde un cargador: verás tu energía, potencia y costo en vivo aquí.',
   'kW now': 'kW ahora',
+  Battery: 'Batería',
+  'Nearly full — charging may slow to protect the battery.':
+    'Casi llena — la carga puede ralentizarse para proteger la batería.',
+  'Reported live by the charger.': 'Reportado en vivo por el cargador.',
   minutes: 'minutos',
   min: 'min',
   cost: 'costo',

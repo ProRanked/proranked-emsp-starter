@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { Card, EmptyState, Spinner, Banner } from '../components/ui.tsx';
 import { BoltIcon, SearchIcon, PinIcon, ChevronRight } from '../components/icons.tsx';
+import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type LocationLite } from '../lib/types.ts';
 
 // San Juan, PR — a sensible default origin for the demo network.
@@ -81,9 +82,9 @@ export function HomeScreen() {
         </div>
       )}
 
-      {/* Faux map banner with nearby pins */}
+      {/* Live interactive station map */}
       <div className="px-5 pt-4">
-        <MapBanner count={filtered.length} locations={filtered} />
+        <LiveMap locations={filtered} origin={ORIGIN} onSelect={(id) => navigate(`/location/${id}`)} />
       </div>
 
       {/* List */}
@@ -123,38 +124,6 @@ export function HomeScreen() {
             </Card>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function MapBanner({ count, locations }: { count: number; locations: LocationLite[] }) {
-  // Pins positioned by relative lat/lng within the visible set (purely decorative).
-  const pts = locations.filter((l) => l.latitude != null && l.longitude != null).slice(0, 12);
-  const lats = pts.map((p) => p.latitude!);
-  const lngs = pts.map((p) => p.longitude!);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-  const pos = (p: LocationLite) => ({
-    left: `${10 + (lngs.length > 1 ? ((p.longitude! - minLng) / (maxLng - minLng || 1)) * 80 : 50)}%`,
-    top: `${15 + (lats.length > 1 ? (1 - (p.latitude! - minLat) / (maxLat - minLat || 1)) * 65 : 40)}%`,
-  });
-  return (
-    <div className="relative h-40 overflow-hidden rounded-3xl border border-line">
-      <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_-20%,rgba(46,230,166,0.18),transparent_55%)] bg-card-2" />
-      <div className="absolute inset-0 opacity-[0.18]" style={{ backgroundImage: 'linear-gradient(#2a2a3a 1px, transparent 1px), linear-gradient(90deg, #2a2a3a 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-      {/* user dot */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <span className="absolute -inset-3 animate-pulse-volt rounded-full bg-volt/20" />
-        <span className="relative block h-3 w-3 rounded-full bg-volt ring-4 ring-volt/20" />
-      </div>
-      {pts.map((p) => (
-        <div key={p.id} className="absolute -translate-x-1/2 -translate-y-full text-volt" style={pos(p)}>
-          <PinIcon className="h-5 w-5 drop-shadow" />
-        </div>
-      ))}
-      <div className="absolute bottom-3 left-4 rounded-full bg-ink/70 px-3 py-1 text-[11px] font-medium text-text-soft backdrop-blur">
-        {count} sites in range
       </div>
     </div>
   );

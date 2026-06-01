@@ -230,15 +230,20 @@ export function ChargerScreen() {
                 <Button onClick={() => navigate('/session', { state: { sessionId: sessionHere.id, chargerId: id, connector: sessionHere.connectorNumber ?? connector } })}>
                   <BoltIcon className="h-5 w-5" /> {t('View live session')}
                 </Button>
+                {/* Remote reset is allowed only on a charger the driver is actively using (the eMSP API
+                    enforces this — a driver can't reset chargers they don't have a live session on).
+                    Surface it only when their own charger drops offline mid-session. */}
+                {!online && (
+                  <button type="button" onClick={resetCharger} disabled={resetting} className="block text-[12px] font-semibold text-volt underline disabled:opacity-50">
+                    {resetting ? t('Sending reset…') : t('Charger offline? Try a remote reset')}
+                  </button>
+                )}
               </div>
             ) : (
               <>
                 {!online && (
                   <Banner tone="warn">
                     {t('This charger is offline right now — it can’t start a session. Try another charger or site.')}
-                    <button type="button" onClick={resetCharger} disabled={resetting} className="mt-1.5 block text-[12px] font-semibold text-volt underline disabled:opacity-50">
-                      {resetting ? t('Sending reset…') : t('Try a remote reset')}
-                    </button>
                   </Banner>
                 )}
                 <div className="space-y-2.5 pt-1">

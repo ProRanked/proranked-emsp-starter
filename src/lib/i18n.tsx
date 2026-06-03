@@ -142,6 +142,8 @@ const ES: Record<string, string> = {
     'Este cargador está fuera de línea ahora. Prueba otro conector o sitio.',
   'This connector is reserved right now. Try another connector.':
     'Este conector está reservado ahora. Prueba otro conector.',
+  'Add a payment method to start charging.':
+    'Agrega un método de pago para comenzar a cargar.',
   // Location detail
   'Charging site': 'Estación de carga',
   'Chargers at this site': 'Cargadores en este sitio',

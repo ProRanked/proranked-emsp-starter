@@ -6,6 +6,7 @@ import { Button, Card, Spinner, StatusPill, Banner, useAsync, money } from '../c
 import { ChevronLeft, PlugIcon, BoltIcon, ClockIcon } from '../components/icons.tsx';
 import { asArray, type Tariff } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
+import { PhevnixApiError } from '../lib/phevnix.ts';
 
 interface ChargerDetail {
   id: string;
@@ -32,7 +33,7 @@ export function ChargerScreen() {
   const sessionHere = activeSession && activeSession.chargerId === id ? activeSession : null;
   const [connector, setConnector] = useState(1);
   const [busy, setBusy] = useState<'start' | 'reserve' | 'schedule' | null>(null);
-  const [msg, setMsg] = useState<{ tone: 'volt' | 'warn'; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ tone: 'volt' | 'warn'; text: string; action?: 'add-card' } | null>(null);
   const [scheduling, setScheduling] = useState(false);
   const [schedAt, setSchedAt] = useState('');
 
@@ -80,7 +81,13 @@ export function ChargerScreen() {
       refreshActiveSession();
       navigate('/session', { state: { sessionId: res?.id, chargerId: id, connector } });
     } catch (e) {
-      setMsg({ tone: 'warn', text: errText(e, t) });
+      // A phevnix_managed network requires a saved card to charge. Surface a friendly message + an
+      // "Add a card" CTA instead of the raw backend "driver has no default card" 402.
+      if (isNoCardError(e)) {
+        setMsg({ tone: 'warn', text: t('Add a payment method to start charging.'), action: 'add-card' });
+      } else {
+        setMsg({ tone: 'warn', text: errText(e, t) });
+      }
     } finally {
       setBusy(null);
     }
@@ -219,7 +226,22 @@ export function ChargerScreen() {
               </div>
             )}
 
-            {msg && <Banner tone={msg.tone}>{msg.text}</Banner>}
+            {msg && (
+              <Banner tone={msg.tone}>
+                <div className="space-y-2">
+                  <p>{msg.text}</p>
+                  {msg.action === 'add-card' && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/account')}
+                      className="font-semibold text-volt underline"
+                    >
+                      {t('Add a card')}
+                    </button>
+                  )}
+                </div>
+              </Banner>
+            )}
 
             {/* Actions */}
             {sessionHere ? (
@@ -322,6 +344,14 @@ function connectorLabel(standard?: string): string {
   if (s.includes('TESLA')) return 'Tesla';
   if (s.includes('DOMESTIC')) return 'Wall plug';
   return standard.replace(/_/g, ' ');
+}
+
+/** True ONLY for the "no default card" 402 — NOT its sibling 402s (3DS payment_action_required,
+ *  declined payment_failed), which keep their own accurate backend message via errText. */
+function isNoCardError(e: unknown): boolean {
+  if (e instanceof PhevnixApiError && e.errorCode === 'payment_method_required') return true;
+  const m = e instanceof Error ? e.message : String(e);
+  return /no default card/i.test(m);
 }
 
 function errText(e: unknown, t: (s: string) => string): string {

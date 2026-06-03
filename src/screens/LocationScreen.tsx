@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
@@ -8,23 +8,43 @@ import { LiveMap } from '../components/LiveMap.tsx';
 import { asArray, type ChargerLite, type LocationLite, type ReviewsResponse } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 
+interface FavoriteLite { id: string; targetType: 'location' | 'charger'; targetId?: string }
+
 export function LocationScreen() {
   const { id = '' } = useParams();
   const { client } = usePhevnix();
   const navigate = useNavigate();
   const { t } = useT();
   const [saved, setSaved] = useState(false);
+  const [favId, setFavId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [showAllChargers, setShowAllChargers] = useState(false);
 
   const loc = useAsync(() => client.getLocation(id) as Promise<LocationLite>, [id]);
   const chargers = useAsync(async () => asArray<ChargerLite>(await client.getLocationChargers(id)), [id]);
 
-  async function save() {
+  // Reflect whether THIS site is already saved so the heart isn't always shown as un-saved. Favorites
+  // may be disabled per network — treat any error as "none" (toggle() surfaces the real reason on tap).
+  const favs = useAsync(async () => {
+    try { return asArray<FavoriteLite>(await client.listFavorites()); } catch { return [] as FavoriteLite[]; }
+  }, [id]);
+  useEffect(() => {
+    const f = favs.data?.find((x) => x.targetType === 'location' && x.targetId === id);
+    if (f) { setSaved(true); setFavId(f.id); }
+  }, [favs.data, id]);
+
+  // Toggle the favorite: remove when already saved, add otherwise. Optimistic, with the real error surfaced.
+  async function toggle() {
     setSaveMsg(null);
     try {
-      await client.addFavorite({ targetType: 'location', targetId: id, label: (loc.data as LocationLite)?.name });
-      setSaved(true);
+      if (saved && favId) {
+        await client.removeFavorite(favId);
+        setSaved(false); setFavId(null);
+      } else {
+        const created = (await client.addFavorite({ targetType: 'location', targetId: id, label: (loc.data as LocationLite)?.name })) as { id?: string } | undefined;
+        setSaved(true);
+        if (created?.id) setFavId(created.id); else favs.reload(); // re-sync the id so a later un-save works
+      }
     } catch (e) {
       // Favorites can be disabled per network — show that honestly.
       setSaveMsg(e instanceof Error && /feature_disabled/.test(e.message) ? t('Saved places aren’t enabled by your provider.') : t('Could not save.'));
@@ -40,7 +60,7 @@ export function LocationScreen() {
         subtitle={l ? [l.address, l.city].filter(Boolean).join(', ') : undefined}
         back={<button aria-label="Go back" onClick={() => navigate(-1)} className="-ml-1 text-text-soft"><ChevronLeft className="h-6 w-6" /></button>}
         action={
-          <button aria-label={saved ? 'Saved' : 'Save this site'} onClick={save} className={`rounded-full p-2 ${saved ? 'text-rose' : 'text-text-soft hover:text-text'}`}>
+          <button aria-label={saved ? 'Saved' : 'Save this site'} onClick={toggle} className={`rounded-full p-2 ${saved ? 'text-rose' : 'text-text-soft hover:text-text'}`}>
             <HeartIcon className="h-6 w-6" {...(saved ? { fill: 'currentColor' } : {})} />
           </button>
         }

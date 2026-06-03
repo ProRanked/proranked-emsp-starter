@@ -122,6 +122,7 @@ function AddCardForm({ onDone, onCancel }: { onDone: (paymentMethodId: string | 
   const elements = useElements();
   const { t } = useT();
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
@@ -139,10 +140,15 @@ function AddCardForm({ onDone, onCancel }: { onDone: (paymentMethodId: string | 
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <PaymentElement />
+      {/* The Stripe iframe takes a few seconds to paint — show a spinner over the reserved space
+          instead of a blank gap, and keep Save disabled until the card fields are ready. */}
+      <div className="relative min-h-[120px]">
+        {!ready && <div className="absolute inset-0 flex items-center justify-center text-volt"><Spinner /></div>}
+        <PaymentElement onReady={() => setReady(true)} />
+      </div>
       {err && <Banner tone="warn">{err}</Banner>}
       <div className="flex gap-2">
-        <Button type="submit" loading={busy} disabled={!stripe}>{t('Save card')}</Button>
+        <Button type="submit" loading={busy} disabled={!stripe || !ready}>{t('Save card')}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>{t('Cancel')}</Button>
       </div>
     </form>

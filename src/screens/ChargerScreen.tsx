@@ -365,7 +365,8 @@ function connectorLabel(standard?: string): string {
 function isNoCardError(e: unknown): boolean {
   if (e instanceof PhevnixApiError && e.errorCode === 'payment_method_required') return true;
   const m = e instanceof Error ? e.message : String(e);
-  return /no default card/i.test(m);
+  // Defense-in-depth for the raw backend message (a customer with no saved/default card).
+  return /no (default|saved) card|payment method required/i.test(m);
 }
 
 function errText(e: unknown, t: (s: string) => string): string {

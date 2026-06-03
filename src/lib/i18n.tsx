@@ -94,6 +94,7 @@ const ES: Record<string, string> = {
   'Charge limit reached — stopping.': 'Límite de carga alcanzado — deteniendo.',
   'Battery at end': 'Batería al final',
   'Add a card': 'Agregar tarjeta',
+  'Add a payment method': 'Agrega un método de pago',
   'Save card': 'Guardar tarjeta',
   'Make default': 'Predeterminar',
   Default: 'Predeterminada',

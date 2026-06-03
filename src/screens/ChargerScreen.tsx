@@ -4,6 +4,7 @@ import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
 import { Button, Card, Spinner, StatusPill, Banner, useAsync, money } from '../components/ui.tsx';
 import { ChevronLeft, PlugIcon, BoltIcon, ClockIcon } from '../components/icons.tsx';
+import { AddCardSheet } from '../components/PaymentMethods.tsx';
 import { asArray, type Tariff } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
 import { PhevnixApiError } from '../lib/phevnix.ts';
@@ -34,6 +35,7 @@ export function ChargerScreen() {
   const [connector, setConnector] = useState(1);
   const [busy, setBusy] = useState<'start' | 'reserve' | 'schedule' | null>(null);
   const [msg, setMsg] = useState<{ tone: 'volt' | 'warn'; text: string; action?: 'add-card' } | null>(null);
+  const [addingCard, setAddingCard] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [schedAt, setSchedAt] = useState('');
 
@@ -230,10 +232,10 @@ export function ChargerScreen() {
               <Banner tone={msg.tone}>
                 <div className="space-y-2">
                   <p>{msg.text}</p>
-                  {msg.action === 'add-card' && (
+                  {msg.action === 'add-card' && !addingCard && (
                     <button
                       type="button"
-                      onClick={() => navigate('/account')}
+                      onClick={() => setAddingCard(true)}
                       className="font-semibold text-volt underline"
                     >
                       {t('Add a card')}
@@ -241,6 +243,18 @@ export function ChargerScreen() {
                   )}
                 </div>
               </Banner>
+            )}
+
+            {/* Add a card without leaving the start flow. Once saved (and set as default), retry the
+                start automatically so the driver lands in the live session. */}
+            {addingCard && (
+              <Card className="space-y-3">
+                <p className="text-[14px] font-semibold">{t('Add a payment method')}</p>
+                <AddCardSheet
+                  onAdded={() => { setAddingCard(false); setMsg(null); void start(); }}
+                  onCancel={() => setAddingCard(false)}
+                />
+              </Card>
             )}
 
             {/* Actions */}

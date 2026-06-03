@@ -80,6 +80,7 @@ export interface Tariff {
 export interface Reservation {
   id: string;
   chargerId: string;
+  chargerName?: string;
   connectorNumber: number;
   status: string;
   idTag: string;

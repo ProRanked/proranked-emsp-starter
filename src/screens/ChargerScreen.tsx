@@ -147,12 +147,15 @@ export function ChargerScreen() {
 
         {!charger.loading && (
           <>
-            {/* Power + tariff summary */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card>
-                <div className="flex items-center gap-2 text-text-soft"><BoltIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">{t('Max power')}</span></div>
-                <p className="mt-1 text-[22px] font-bold">{c?.maxPowerKw ?? conns[0]?.maxPowerKw ?? '—'}<span className="ml-1 text-[13px] font-medium text-text-soft">kW</span></p>
-              </Card>
+            {/* Power + tariff summary. Hide "Max power" when the rating is unknown rather than show a
+                blank "— kW"; Energy rate then spans the full width. */}
+            <div className={c?.maxPowerKw != null ? 'grid grid-cols-2 gap-3' : ''}>
+              {c?.maxPowerKw != null && (
+                <Card>
+                  <div className="flex items-center gap-2 text-text-soft"><BoltIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">{t('Max power')}</span></div>
+                  <p className="mt-1 text-[22px] font-bold">{c.maxPowerKw}<span className="ml-1 text-[13px] font-medium text-text-soft">kW</span></p>
+                </Card>
+              )}
               <Card>
                 <div className="flex items-center gap-2 text-text-soft"><ClockIcon className="h-4 w-4 text-volt" /><span className="text-[12px]">{t('Energy rate')}</span></div>
                 <p className="mt-1 text-[22px] font-bold">

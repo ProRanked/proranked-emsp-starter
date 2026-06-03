@@ -8,7 +8,7 @@ import { useT } from '../lib/i18n.tsx';
 
 interface Sched { id: string; connectorNumber?: number; scheduledTime?: string; status?: string; statusReason?: string }
 
-interface ReservationDetail { chargerId?: string; idTag?: string; createdAt?: string; statusReason?: string }
+interface ReservationDetail { chargerId?: string; chargerName?: string; idTag?: string; createdAt?: string; statusReason?: string }
 
 export function ReservationsScreen() {
   const { client } = usePhevnix();
@@ -92,7 +92,7 @@ export function ReservationsScreen() {
           <Card key={r.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[14.5px] font-semibold">{t('Connector')} {r.connectorNumber}</p>
+                <p className="text-[14.5px] font-semibold">{r.chargerName ? `${r.chargerName} · ` : ''}{t('Connector')} {r.connectorNumber}</p>
                 <p className="mt-0.5 text-[12px] text-text-soft">{t('Hold expires')} {new Date(r.expiryDate).toLocaleString()}</p>
                 <p className="mt-0.5 text-[11px] text-text-faint">{t('Tag')} {r.idTag}</p>
               </div>
@@ -100,7 +100,9 @@ export function ReservationsScreen() {
             </div>
             {detail[r.id] && detail[r.id] !== 'loading' && (
               <div className="mt-3 space-y-1 border-t border-line pt-3 text-[12px] text-text-soft">
-                {(detail[r.id] as ReservationDetail).chargerId && <p>{t('Charger')} <span className="font-mono text-text">{(detail[r.id] as ReservationDetail).chargerId}</span></p>}
+                {((detail[r.id] as ReservationDetail).chargerName || (detail[r.id] as ReservationDetail).chargerId) && (
+                  <p>{t('Charger')} <span className={(detail[r.id] as ReservationDetail).chargerName ? 'font-semibold text-text' : 'font-mono text-text'}>{(detail[r.id] as ReservationDetail).chargerName ?? (detail[r.id] as ReservationDetail).chargerId}</span></p>
+                )}
                 {(detail[r.id] as ReservationDetail).createdAt && <p>{t('Reserved')} {new Date((detail[r.id] as ReservationDetail).createdAt!).toLocaleString()}</p>}
                 {(detail[r.id] as ReservationDetail).statusReason && <p className="text-rose">{(detail[r.id] as ReservationDetail).statusReason}</p>}
               </div>

@@ -131,7 +131,7 @@ export class PhevnixEmspClient {
 
   // ── Core request helper ────────────────────────────────────────────────
 
-  private async request<T>(method: string, path: string, opts: { query?: Query; body?: unknown } = {}, _retried = false): Promise<T> {
+  private async request<T>(method: string, path: string, opts: { query?: Query; body?: unknown } = {}, _retried = false, _transientRetried = false): Promise<T> {
     const url = new URL(this.baseUrl + path);
     for (const [k, v] of Object.entries(opts.query ?? {})) {
       if (v !== undefined) url.searchParams.set(k, String(v));
@@ -141,11 +141,23 @@ export class PhevnixEmspClient {
     if (this.accessToken) headers['Authorization'] = `Bearer ${this.accessToken}`;
     if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
 
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    });
+    let res: Response;
+    try {
+      res = await this.fetchWithTimeout(url, {
+        method,
+        headers,
+        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      });
+    } catch (e) {
+      // A timed-out or dropped connection would otherwise spin a screen forever. Retry once for an
+      // idempotent read; for everything else surface a clean error (never an infinite spinner).
+      if (method === 'GET' && !_transientRetried) {
+        await delay(600);
+        return this.request<T>(method, path, opts, _retried, true);
+      }
+      if (e instanceof PhevnixApiError) throw e;
+      throw new PhevnixApiError(0, 'network_error', e instanceof Error ? e.message : 'Network error', null);
+    }
 
     const text = await res.text();
     const json = text ? safeParse(text) : null;
@@ -162,11 +174,16 @@ export class PhevnixEmspClient {
       if (refreshable && !_retried && this.refreshToken && !path.startsWith('/emsp/v1/auth/driver')) {
         try {
           await this.ensureRefreshed();
-          return this.request<T>(method, path, opts, true);
+          return this.request<T>(method, path, opts, true, _transientRetried);
         } catch {
           this.clearSession();
           this.emitTokens();
         }
+      }
+      // Transient gateway hiccups (502/503/504) — retry once for an idempotent read before giving up.
+      if ((res.status === 502 || res.status === 503 || res.status === 504) && method === 'GET' && !_transientRetried) {
+        await delay(600);
+        return this.request<T>(method, path, opts, _retried, true);
       }
       const message = (json as any)?.message ?? (json as any)?.detail ?? `HTTP ${res.status}`;
       throw new PhevnixApiError(res.status, code, message, json ?? text);
@@ -176,6 +193,22 @@ export class PhevnixEmspClient {
       return (json as any).data as T;
     }
     return json as T;
+  }
+
+  /** fetch() with a hard timeout so a stalled connection becomes an error instead of hanging forever. */
+  private async fetchWithTimeout(url: URL, init: RequestInit): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      return await fetch(url, { ...init, signal: controller.signal });
+    } catch (e) {
+      if (controller.signal.aborted) {
+        throw new PhevnixApiError(0, 'timeout', 'The request timed out — please try again.', null);
+      }
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /** Refresh the access token at most once even if many requests 401 at the same time. */
@@ -459,6 +492,11 @@ export class PhevnixEmspClient {
     return tag;
   }
 }
+
+/** Hard per-request timeout — long enough for a slow cold start, short enough to never hang a screen. */
+const REQUEST_TIMEOUT_MS = 20000;
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 function safeParse(text: string): unknown {
   try {

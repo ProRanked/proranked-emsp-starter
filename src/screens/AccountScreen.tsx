@@ -116,6 +116,12 @@ export function AccountScreen() {
           <Card>
             {pay.loading ? (
               <div className="flex justify-center py-4 text-volt"><Spinner /></div>
+            ) : pay.error ? (
+              // Don't assume self-managed when the config call simply failed — offer a retry instead.
+              <div className="space-y-2">
+                <Banner tone="warn">{t('Couldn’t load payment options.')}</Banner>
+                <button onClick={pay.reload} className="text-[13px] font-semibold text-volt">{t('Try again')}</button>
+              </div>
             ) : pay.data?.paymentMode === 'phevnix_managed' ? (
               <div>
                 <p className="mb-2 flex items-center gap-2 text-[14px] font-semibold"><CardIcon className="h-5 w-5 text-volt" /> {t('Managed by Voltway')}</p>

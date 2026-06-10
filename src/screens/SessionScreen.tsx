@@ -33,6 +33,13 @@ export function SessionScreen() {
   // Opt-in charge limit: auto-stop when the EV battery reaches a target SoC (like Tesla/ChargePoint).
   const [socLimit, setSocLimit] = useState<number | null>(null);
   const autoStopped = useRef(false);
+  // Wall-clock tick (1s) so the elapsed timer counts up smoothly between the
+  // slower session polls.
+  const [nowTs, setNowTs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Live power history for the charging curve. Sampled off the centrally-polled
   // session: append a point whenever delivered energy advances (a fresh poll),
@@ -145,7 +152,18 @@ export function SessionScreen() {
   const kwh = session?.energyDeliveredKwh ?? 0;
   const power = session?.currentPowerKw ?? 0;
   const soc = reportedSoc(session);
-  const mins = session?.durationSeconds != null ? Math.floor(session.durationSeconds / 60) : 0;
+  // Elapsed time ticks client-side from the session start. CPO returns
+  // durationSeconds=0 for an in-flight session, so relying on it freezes the
+  // timer at 0. SessionStartDateTimeUtc is a UTC instant that may serialize
+  // without a 'Z' — treat a tz-less value as UTC so the count is right in any
+  // local zone. max() with durationSeconds keeps a completed session correct.
+  const startMs = session?.startTime
+    ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(session.startTime) ? session.startTime : session.startTime + 'Z').getTime()
+    : null;
+  const elapsedSec = startMs != null
+    ? Math.max(session?.durationSeconds ?? 0, Math.floor((nowTs - startMs) / 1000))
+    : (session?.durationSeconds ?? 0);
+  const elapsed = `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, '0')}`;
   const active = !!session;
   const peakKw = history.length ? Math.max(...history) : power;
   const avgKw = history.length ? history.reduce((a, b) => a + b, 0) / history.length : power;
@@ -233,7 +251,7 @@ export function SessionScreen() {
         {/* Live stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card className="text-center"><p className="text-[18px] font-bold">{power.toFixed(1)}</p><p className="text-[11px] text-text-soft">{t('kW now')}</p></Card>
-          <Card className="text-center"><p className="text-[18px] font-bold">{mins}</p><p className="text-[11px] text-text-soft">{t('minutes')}</p></Card>
+          <Card className="text-center"><p className="text-[18px] font-bold tabular-nums">{elapsed}</p><p className="text-[11px] text-text-soft">{t('elapsed')}</p></Card>
           <Card className="text-center"><p className="text-[18px] font-bold">{money(session?.total ?? session?.cost ?? 0, session?.currency)}</p><p className="text-[11px] text-text-soft">{t('cost')}</p></Card>
         </div>
 

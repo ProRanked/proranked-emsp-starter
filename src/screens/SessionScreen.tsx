@@ -12,6 +12,10 @@ import { useT } from '../lib/i18n.tsx';
 // unless the driver deliberately dials it down — not a misleading half-speed default.
 const MIN_AMPS = 6;
 const MAX_AMPS = 32;
+// Treat the charger as unresponsive if no fresh meter reading has advanced the delivered
+// energy within this window — surfaces a dropped/offline charger so the session view stops
+// pretending to charge (and so remote commands don't falsely claim success).
+const STALE_MS = 100_000;
 
 export function SessionScreen() {
   const { client, activeSession: session, refreshActiveSession } = usePhevnix();
@@ -33,6 +37,10 @@ export function SessionScreen() {
   // Opt-in charge limit: auto-stop when the EV battery reaches a target SoC (like Tesla/ChargePoint).
   const [socLimit, setSocLimit] = useState<number | null>(null);
   const autoStopped = useRef(false);
+  // SmartCharging may be disabled for the network — when so, hide the speed slider (it's inert).
+  const [smartChargingOff, setSmartChargingOff] = useState(false);
+  // Wall-clock of the last time delivered energy advanced — basis for the stale/offline check.
+  const lastProgressRef = useRef<number>(Date.now());
   // Wall-clock tick (1s) so the elapsed timer counts up smoothly between the
   // slower session polls.
   const [nowTs, setNowTs] = useState(() => Date.now());
@@ -55,6 +63,7 @@ export function SessionScreen() {
     const e = session.energyDeliveredKwh ?? 0;
     if (e !== lastEnergy.current) {
       lastEnergy.current = e;
+      lastProgressRef.current = Date.now(); // energy advanced → charger is live & reporting
       setHistory((h) => [...h, session.currentPowerKw ?? 0].slice(-80));
     }
   }, [session]);
@@ -123,7 +132,13 @@ export function SessionScreen() {
       try {
         const eff = (await client.getChargingLimit(chargerId, connectorNumber, 'A')) as { limit?: number };
         if (alive && typeof eff?.limit === 'number' && eff.limit >= MIN_AMPS && eff.limit <= MAX_AMPS) setLimit(eff.limit);
-      } catch { /* no limit set — keep the default (max) */ }
+      } catch (e) {
+        // SmartCharging may be disabled for this network (403 feature_disabled) — hide the
+        // speed control rather than leaving an inert slider on screen.
+        const err = e as { status?: number; errorCode?: string };
+        if (alive && (err?.errorCode === 'feature_disabled' || err?.status === 403)) setSmartChargingOff(true);
+        /* otherwise: no limit set — keep the default (max) */
+      }
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,6 +154,13 @@ export function SessionScreen() {
   async function unlockCable() {
     if (!chargerId) return;
     setNote(null);
+    // Unlock is fire-and-forget at the backend — it returns OK even when the charger is
+    // unreachable. If we haven't heard from the charger recently, don't falsely confirm
+    // "unlocked"; tell the driver it may not have reached the charger.
+    if (Date.now() - lastProgressRef.current > STALE_MS) {
+      setNote(t("The charger isn't responding right now — an unlock may not reach it. Try Refresh status first."));
+      return;
+    }
     try { await client.unlockConnector(chargerId, connectorNumber); setNote(t('Connector unlocked — you can unplug.')); }
     catch (e) { setNote(e instanceof Error ? e.message : 'Could not unlock the connector'); }
   }
@@ -165,6 +187,8 @@ export function SessionScreen() {
     : (session?.durationSeconds ?? 0);
   const elapsed = `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, '0')}`;
   const active = !!session;
+  // Charger unresponsive: no fresh energy reading has advanced within STALE_MS (dropped/offline).
+  const stale = active && nowTs - lastProgressRef.current > STALE_MS;
   const peakKw = history.length ? Math.max(...history) : power;
   const avgKw = history.length ? history.reduce((a, b) => a + b, 0) / history.length : power;
   // Charge goal → live ETA from current power (now that currentPowerKw is real).
@@ -183,15 +207,22 @@ export function SessionScreen() {
         {/* Charging gauge */}
         <div className="relative mx-auto flex h-60 w-60 items-center justify-center">
           <div className={`absolute inset-0 rounded-full border-[10px] ${active ? 'border-volt/25' : 'border-line'}`} />
-          <div className={`absolute inset-0 rounded-full border-[10px] border-transparent ${active ? 'border-t-volt animate-spin [animation-duration:3s]' : ''}`} />
+          <div className={`absolute inset-0 rounded-full border-[10px] border-transparent ${active && !stale ? 'border-t-volt animate-spin [animation-duration:3s]' : ''}`} />
           <div className="text-center">
-            <div className={`mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full ${active ? 'bg-volt/15 text-volt animate-pulse-volt' : 'bg-card-2 text-text-faint'}`}>
+            <div className={`mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full ${active && !stale ? 'bg-volt/15 text-volt animate-pulse-volt' : 'bg-card-2 text-text-faint'}`}>
               <BoltIcon className="h-7 w-7" />
             </div>
             <p className="text-[40px] font-extrabold leading-none">{kwh.toFixed(1)}</p>
             <p className="text-[13px] text-text-soft">{t('kWh delivered')}</p>
           </div>
         </div>
+
+        {/* Charger went quiet mid-session — don't keep implying it's still charging. */}
+        {active && stale && (
+          <Banner tone="warn">
+            {t("We haven't had a fresh reading from this charger in a while — it may have lost connection and your session may have stopped. Try Refresh status, or tap Stop charging.")}
+          </Banner>
+        )}
 
         {/* Live EV battery — only when the charger reports the OCPP SoC measurand */}
         {active && soc != null && (
@@ -305,7 +336,8 @@ export function SessionScreen() {
           </Card>
         )}
 
-        {/* Charging speed limit */}
+        {/* Charging speed limit — hidden when SmartCharging is disabled for the network (inert otherwise) */}
+        {!smartChargingOff && (
         <Card>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[14px] font-semibold">{t('Charging speed')}</p>
@@ -328,6 +360,7 @@ export function SessionScreen() {
           <div className="mt-1 flex justify-between text-[11px] text-text-faint"><span>{t('Eco · 6 A')}</span><span>{t('Max · 32 A')}</span></div>
           {limitMsg && <p className="mt-2 text-[12px] text-volt">{limitMsg}</p>}
         </Card>
+        )}
 
         {note && <Banner tone="warn">{note}</Banner>}
 

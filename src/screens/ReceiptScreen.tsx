@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { ScreenHeader } from '../components/AppLayout.tsx';
@@ -30,6 +30,19 @@ export function ReceiptScreen() {
 
   const detail = useAsync(() => client.getSession(id) as Promise<ChargingSessionDetail>, [id]);
   const s = detail.data;
+
+  // The receipt opens the instant the session stops — before the CDR finalizes. Duration,
+  // energy cost and payment status only land once the StopTransaction event settles a moment
+  // later, so the first fetch can return a stale 0-min / $0 snapshot. Re-fetch a few times
+  // (capped) until the session looks finalized, so the receipt lands on the real totals.
+  const polls = useRef(0);
+  useEffect(() => {
+    const finalized =
+      !!s && s.status?.toUpperCase() === 'COMPLETED' && ((s.durationSeconds ?? 0) > 0 || !!s.endTime);
+    if (detail.loading || finalized || polls.current >= 8) return;
+    const h = setTimeout(() => { polls.current += 1; detail.reload(); }, 2500);
+    return () => clearTimeout(h);
+  }, [s, detail.loading, detail.reload]);
 
   const currency = s?.costs?.currency ?? s?.currency ?? 'USD';
   const total = s?.costs?.total ?? s?.total ?? s?.cost ?? 0;

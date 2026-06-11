@@ -210,6 +210,7 @@ const ES: Record<string, string> = {
   'Couldn’t find that destination.': 'No se encontró ese destino.',
   'No driving route found.': 'No se encontró una ruta.',
   'Couldn’t plan that trip. Try again.': 'No se pudo planear el viaje. Inténtalo de nuevo.',
+  'Couldn’t load payment options.': 'No se pudieron cargar las opciones de pago.',
   distance: 'distancia',
   'drive time': 'tiempo de viaje',
   'No charging stops within reach of this route.': 'No hay paradas de carga cerca de esta ruta.',

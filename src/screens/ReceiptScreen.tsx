@@ -46,11 +46,11 @@ export function ReceiptScreen() {
 
   const currency = s?.costs?.currency ?? s?.currency ?? 'USD';
   const total = s?.costs?.total ?? s?.total ?? s?.cost ?? 0;
-  // The API's `subtotal` already bundles session + idle fees; back them out so the
+  // The API's `subtotal` bundles session + idle + time fees; back them all out so the
   // Energy line is pure energy and the itemized rows actually sum to the total.
   const energyCharge =
     s?.costs?.subtotal != null
-      ? Math.max(0, s.costs.subtotal - (s.costs.sessionFees ?? 0) - (s.costs.idleFees ?? 0))
+      ? Math.max(0, s.costs.subtotal - (s.costs.sessionFees ?? 0) - (s.costs.idleFees ?? 0) - (s.costs.timeFees ?? 0))
       : total;
   const start = s?.startTime ? new Date(s.startTime) : null;
   const end = s?.endTime ? new Date(s.endTime) : null;
@@ -125,6 +125,7 @@ export function ReceiptScreen() {
             <Card className="space-y-2.5">
               <p className="mb-1 flex items-center gap-2 text-[13px] font-semibold text-text-soft"><BoltIcon className="h-4 w-4 text-volt" /> {t('Charges')}</p>
               <Row label={t('Energy')} value={money(energyCharge, currency)} />
+              {s.costs?.timeFees != null && s.costs.timeFees > 0 && <Row label={t('Time')} value={money(s.costs.timeFees, currency)} />}
               {s.costs?.sessionFees != null && s.costs.sessionFees > 0 && <Row label={t('Session fee')} value={money(s.costs.sessionFees, currency)} />}
               {s.costs?.idleFees != null && s.costs.idleFees > 0 && <Row label={t('Idle fee')} value={money(s.costs.idleFees, currency)} />}
               {s.costs?.taxes != null && s.costs.taxes > 0 && <Row label={t('Taxes')} value={money(s.costs.taxes, currency)} />}

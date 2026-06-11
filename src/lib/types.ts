@@ -132,6 +132,7 @@ export interface ChargingSessionDetail extends ChargingSession {
     taxes?: number;
     sessionFees?: number;
     idleFees?: number;
+    timeFees?: number;
     total?: number;
     currency?: string;
   };

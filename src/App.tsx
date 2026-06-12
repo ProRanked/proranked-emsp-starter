@@ -22,11 +22,20 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// An authenticated driver must never sit on /login or /register — otherwise a post-login redirect that
+// lands on the auth page re-renders the sign-in screen (and, in a redirect-based BFF flow, re-loops).
+// Bounce them home. Render is gated on bootstrap completion, so `driver` is resolved here — no flash.
+function RedirectIfAuthed({ children }: { children: ReactNode }) {
+  const { driver } = usePhevnix();
+  if (driver) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<AuthScreen mode="login" />} />
-      <Route path="/register" element={<AuthScreen mode="register" />} />
+      <Route path="/login" element={<RedirectIfAuthed><AuthScreen mode="login" /></RedirectIfAuthed>} />
+      <Route path="/register" element={<RedirectIfAuthed><AuthScreen mode="register" /></RedirectIfAuthed>} />
       <Route
         element={
           <RequireAuth>

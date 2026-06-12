@@ -45,7 +45,7 @@ body {
     min-height: 100%;
     padding: 24px 0;
     background:
-      radial-gradient(1200px 600px at 50% -10%, rgba(46,230,166,0.10), transparent 60%),
+      radial-gradient(1200px 600px at 50% -10%, color-mix(in srgb, var(--color-volt) 10%, transparent), transparent 60%),
       var(--color-ink);
   }
   .phone-frame {

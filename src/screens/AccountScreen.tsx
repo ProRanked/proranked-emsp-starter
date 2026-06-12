@@ -8,11 +8,13 @@ import { Card, Spinner, Toggle, Banner, useAsync, money } from '../components/ui
 import { BellIcon, BoltIcon, CardIcon, LeafIcon, UserIcon } from '../components/icons.tsx';
 import { asArray, type NotificationPreferences, type PaymentConfig, type ChargingSession } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
+import { useBranding } from '../context/BrandingProvider.tsx';
 
 export function AccountScreen() {
   const { client, driver, logout } = usePhevnix();
   const navigate = useNavigate();
   const { t, lang, setLang } = useT();
+  const { brand } = useBranding();
 
   // GET /emsp/v1/auth/driver/me — re-fetch the live profile (and validate the token) on mount;
   // fall back to the driver captured at login while it loads or if the network's profile read is off.
@@ -124,7 +126,7 @@ export function AccountScreen() {
               </div>
             ) : pay.data?.paymentMode === 'phevnix_managed' ? (
               <div>
-                <p className="mb-2 flex items-center gap-2 text-[14px] font-semibold"><CardIcon className="h-5 w-5 text-volt" /> {t('Managed by Voltway')}</p>
+                <p className="mb-2 flex items-center gap-2 text-[14px] font-semibold"><CardIcon className="h-5 w-5 text-volt" /> {t('Managed by')} {brand}</p>
                 <PaymentMethods />
               </div>
             ) : (
@@ -170,7 +172,7 @@ export function AccountScreen() {
         </section>
 
         {prefs.error && <Banner tone="warn">{prefs.error}</Banner>}
-        <p className="pt-2 text-center text-[10px] uppercase tracking-wider text-text-faint">Voltway · Powered by Phevnix eMSP API</p>
+        <p className="pt-2 text-center text-[10px] uppercase tracking-wider text-text-faint">{brand} · Powered by Phevnix eMSP API</p>
       </div>
     </div>
   );

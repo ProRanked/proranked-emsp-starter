@@ -39,7 +39,7 @@ type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ variant = 'volt', loading, children, className = '', disabled, ...rest }: BtnProps) {
   const styles = {
-    volt: 'bg-volt text-ink hover:brightness-110 active:brightness-95 shadow-[0_8px_24px_-8px_rgba(46,230,166,0.5)]',
+    volt: 'bg-volt text-ink hover:brightness-110 active:brightness-95 shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-volt)_50%,transparent)]',
     outline: 'border border-line text-text hover:bg-card-2',
     ghost: 'text-text-soft hover:text-text hover:bg-card-2',
     danger: 'bg-rose/15 text-rose hover:bg-rose/25',

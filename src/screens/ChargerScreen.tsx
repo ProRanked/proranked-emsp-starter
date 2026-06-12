@@ -315,7 +315,7 @@ export function ChargerScreen() {
                     </button>
                   )}
                 </div>
-                <p className="text-center text-[11px] text-text-faint">{t('Billed to your Voltway account when the session ends.')}</p>
+                <p className="text-center text-[11px] text-text-faint">{t('Billed to your account when the session ends.')}</p>
               </>
             )}
           </>

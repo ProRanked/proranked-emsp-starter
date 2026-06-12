@@ -110,7 +110,7 @@ export function LocationScreen() {
           </div>
         ) : (
           <div className="relative h-40 overflow-hidden rounded-3xl border border-line bg-card-2">
-            <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_30%_-10%,rgba(46,230,166,0.20),transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_30%_-10%,color-mix(in_srgb,var(--color-volt)_20%,transparent),transparent_55%)]" />
             <div className="absolute bottom-4 left-4 flex items-center gap-2 text-text-soft">
               <PinIcon className="h-5 w-5 text-volt" />
               <span className="text-[13px]">{l?.city ?? 'Location'}{l?.state ? `, ${l.state}` : ''}</span>

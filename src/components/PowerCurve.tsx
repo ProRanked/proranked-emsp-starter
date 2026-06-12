@@ -41,14 +41,14 @@ export function PowerCurve({
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-full w-full" style={{ height: H }}>
       <defs>
         <linearGradient id="pcFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgb(46,230,166)" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="rgb(46,230,166)" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-volt)" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="var(--color-volt)" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#pcFill)" />
-      <path d={line} fill="none" stroke="rgb(46,230,166)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={headX} cy={headY} r="3.5" fill="rgb(46,230,166)" />
-      <circle cx={headX} cy={headY} r="6" fill="rgb(46,230,166)" opacity="0.25">
+      <path d={line} fill="none" stroke="var(--color-volt)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={headX} cy={headY} r="3.5" fill="var(--color-volt)" />
+      <circle cx={headX} cy={headY} r="6" fill="var(--color-volt)" opacity="0.25">
         <animate attributeName="r" values="4;9;4" dur="1.8s" repeatCount="indefinite" />
         <animate attributeName="opacity" values="0.35;0;0.35" dur="1.8s" repeatCount="indefinite" />
       </circle>

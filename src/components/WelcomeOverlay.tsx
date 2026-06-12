@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button } from './ui.tsx';
 import { MapIcon, BoltIcon, ReceiptIcon } from './icons.tsx';
+import { BrandLogo } from './BrandLogo.tsx';
+import { useBranding } from '../context/BrandingProvider.tsx';
 
 const KEY = 'voltway.onboarded';
 
@@ -12,6 +14,7 @@ export function WelcomeOverlay() {
   const [done, setDone] = useState(() => {
     try { return localStorage.getItem(KEY) === '1'; } catch { return true; }
   });
+  const { brand, tagline } = useBranding();
   if (done) return null;
 
   const finish = () => {
@@ -29,10 +32,10 @@ export function WelcomeOverlay() {
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/90 px-5 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-3xl border border-line bg-card p-6">
         <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-volt text-ink"><BoltIcon className="h-6 w-6" /></div>
+          <BrandLogo size="md" />
           <div>
-            <h2 className="text-[19px] font-extrabold leading-tight">Welcome to Voltway</h2>
-            <p className="text-[12.5px] text-text-soft">Charge anywhere. Pay your way.</p>
+            <h2 className="text-[19px] font-extrabold leading-tight">Welcome to {brand}</h2>
+            <p className="text-[12.5px] text-text-soft">{tagline}</p>
           </div>
         </div>
         <div className="space-y-4">

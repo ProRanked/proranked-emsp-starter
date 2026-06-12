@@ -20,7 +20,7 @@ const ES: Record<string, string> = {
   Password: 'Contraseña',
   'Sign in': 'Iniciar sesión',
   'Create one': 'Crear cuenta',
-  'New to Voltway?': '¿Nuevo en Voltway?',
+  'New here?': '¿Eres nuevo?',
   // Home
   'Good to see you,': 'Qué bueno verte,',
   'Search a city or address…': 'Busca una ciudad o dirección…',
@@ -47,7 +47,7 @@ const ES: Record<string, string> = {
   SMS: 'SMS',
   'Text alerts for key events': 'Alertas de texto para eventos clave',
   'Notifications aren’t enabled by your provider.': 'Tu proveedor no ha habilitado las notificaciones.',
-  'Managed by Voltway': 'Gestionado por Voltway',
+  'Managed by': 'Gestionado por',
   'Add a card to charge instantly. Receipts arrive after each session.': 'Agrega una tarjeta para cargar al instante. Los recibos llegan tras cada sesión.',
   'Add payment method': 'Agregar método de pago',
   'Billed directly by your provider': 'Facturado directamente por tu proveedor',
@@ -133,8 +133,8 @@ const ES: Record<string, string> = {
   "You're charging here now": 'Estás cargando aquí ahora',
   'View live session': 'Ver sesión en vivo',
   'Reserve for 15 min': 'Reservar por 15 min',
-  'Billed to your Voltway account when the session ends.':
-    'Se cobrará a tu cuenta Voltway al terminar la sesión.',
+  'Billed to your account when the session ends.':
+    'Se cobrará a tu cuenta al terminar la sesión.',
   'Connector reserved for 15 minutes. Head over and plug in.':
     'Conector reservado por 15 minutos. Ve y conéctate.',
   'This connector is in use right now. Try another connector or come back shortly.':

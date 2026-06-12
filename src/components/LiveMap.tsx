@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Polyline, useMap 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { LocationLite } from '../lib/types.ts';
+import { useBranding } from '../context/BrandingProvider.tsx';
 
 /** Reject null/undefined and the (0,0) default that ungeocoded rows carry. */
 function isValidCoord(lat?: number, lng?: number): lat is number {
@@ -44,6 +45,9 @@ export function LiveMap({
     () => locations.filter((l) => isValidCoord(l.latitude, l.longitude)),
     [locations],
   );
+  // Brand accent for the map's branded surfaces (route, "you are here", pins, View button).
+  const { primaryColor } = useBranding();
+  const accent = /^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : '#2EE6A6';
 
   return (
     <div className="overflow-hidden rounded-3xl border border-line" style={{ height }}>
@@ -66,7 +70,7 @@ export function LiveMap({
 
         {/* Driving route (trip planner) */}
         {route && route.length > 1 && (
-          <Polyline positions={route} pathOptions={{ color: '#2EE6A6', weight: 4, opacity: 0.75 }} />
+          <Polyline positions={route} pathOptions={{ color: accent, weight: 4, opacity: 0.75 }} />
         )}
 
         {/* "You are here" */}
@@ -74,12 +78,12 @@ export function LiveMap({
           <CircleMarker
             center={[origin.lat, origin.lng]}
             radius={7}
-            pathOptions={{ color: '#2EE6A6', fillColor: '#2EE6A6', fillOpacity: 1, weight: 3, opacity: 0.35 }}
+            pathOptions={{ color: accent, fillColor: accent, fillOpacity: 1, weight: 3, opacity: 0.35 }}
           />
         )}
 
         {pins.map((loc) => (
-          <Marker key={loc.id} position={[loc.latitude!, loc.longitude!]} icon={pinIcon(loc)}>
+          <Marker key={loc.id} position={[loc.latitude!, loc.longitude!]} icon={pinIcon(loc, accent)}>
             <Popup>
               <div style={{ minWidth: 160 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{loc.name ?? 'Charging site'}</div>
@@ -95,7 +99,7 @@ export function LiveMap({
                   </span>
                   <button
                     onClick={() => onSelect(loc.id)}
-                    style={{ background: '#2EE6A6', color: '#06231a', fontWeight: 700, fontSize: 12, border: 'none', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer' }}
+                    style={{ background: accent, color: '#06231a', fontWeight: 700, fontSize: 12, border: 'none', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer' }}
                   >
                     View
                   </button>
@@ -116,11 +120,11 @@ export function LiveMap({
  * green = chargers free, amber = all busy/offline, neutral = unknown.
  * The badge shows the available count (or total when availability is unknown).
  */
-function pinIcon(loc: LocationLite) {
+function pinIcon(loc: LocationLite, accent = '#2EE6A6') {
   const avail = loc.availableCount;
   const total = loc.chargerCount;
-  // Color: free → green, none free but some exist → amber, unknown → green.
-  const color = avail != null ? (avail > 0 ? '#2EE6A6' : '#F5A524') : '#2EE6A6';
+  // Color: free → brand accent, none free but some exist → amber, unknown → brand accent.
+  const color = avail != null ? (avail > 0 ? accent : '#F5A524') : accent;
   const badgeVal = avail != null ? avail : total;
   const badge =
     badgeVal != null

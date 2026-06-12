@@ -6,6 +6,7 @@ import { Card, Button, Spinner, Banner, useAsync } from './ui.tsx';
 import { CardIcon } from './icons.tsx';
 import { asArray } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
+import { useBranding } from '../context/BrandingProvider.tsx';
 
 interface SavedCard { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean }
 
@@ -69,6 +70,7 @@ export function PaymentMethods() {
 export function AddCardSheet({ onAdded, onCancel }: { onAdded: () => void; onCancel: () => void }) {
   const { client } = usePhevnix();
   const { t } = useT();
+  const { primaryColor } = useBranding();
   const [intent, setIntent] = useState<{ clientSecret: string; publishableKey: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export function AddCardSheet({ onAdded, onCancel }: { onAdded: () => void; onCan
     );
   }
   return (
-    <Elements stripe={stripeFor(intent.publishableKey)} options={{ clientSecret: intent.clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#2ee6a6' } } }}>
+    <Elements stripe={stripeFor(intent.publishableKey)} options={{ clientSecret: intent.clientSecret, appearance: { theme: 'night', variables: { colorPrimary: /^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : '#2ee6a6' } } }}>
       <AddCardForm onDone={handleSaved} onCancel={onCancel} />
     </Elements>
   );

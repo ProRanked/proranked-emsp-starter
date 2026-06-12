@@ -6,6 +6,7 @@ import { Card, Spinner, Banner, StatusPill, Button, useAsync, money } from '../c
 import { ChevronLeft, BoltIcon, ReceiptIcon } from '../components/icons.tsx';
 import { reportedSoc, type ChargingSessionDetail } from '../lib/types.ts';
 import { useT } from '../lib/i18n.tsx';
+import { useBranding } from '../context/BrandingProvider.tsx';
 
 /** Driver-friendly label for the phevnix_managed payment lifecycle. Null = nothing to show
  *  (self_managed networks, or no payment on the session). */
@@ -26,6 +27,7 @@ export function ReceiptScreen() {
   const { client } = usePhevnix();
   const navigate = useNavigate();
   const { t } = useT();
+  const { brand } = useBranding();
   const [note, setNote] = useState<string | null>(null);
 
   const detail = useAsync(() => client.getSession(id) as Promise<ChargingSessionDetail>, [id]);
@@ -59,7 +61,7 @@ export function ReceiptScreen() {
   async function share() {
     if (!s) return;
     const lines = [
-      `Voltway charging receipt`,
+      `${brand} charging receipt`,
       `${s.locationName ?? s.chargerUid ?? 'Charger'} — ${start ? start.toLocaleString() : ''}`,
       `${(s.energyDeliveredKwh ?? 0).toFixed(2)} kWh · ${mins ?? 0} min`,
       `Total ${money(total, currency)}`,

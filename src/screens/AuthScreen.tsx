@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePhevnix } from '../context/PhevnixProvider.tsx';
 import { Button, Field, Banner } from '../components/ui.tsx';
-import { BoltIcon } from '../components/icons.tsx';
+import { BrandLogo } from '../components/BrandLogo.tsx';
+import { useBranding } from '../context/BrandingProvider.tsx';
 import { useT } from '../lib/i18n.tsx';
 
 export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
   const { login, register, keyConfigured, client } = usePhevnix();
   const navigate = useNavigate();
   const { t } = useT();
+  const { brand, tagline } = useBranding();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -50,12 +52,10 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
         {/* Brand */}
         <div className="pt-14">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-volt text-ink shadow-[0_10px_30px_-8px_rgba(46,230,166,0.6)]">
-              <BoltIcon className="h-7 w-7" />
-            </div>
+            <BrandLogo size="lg" />
             <div>
-              <p className="text-[22px] font-extrabold tracking-tight">Voltway</p>
-              <p className="-mt-0.5 text-[12px] text-text-soft">Charge anywhere. Pay your way.</p>
+              <p className="text-[22px] font-extrabold tracking-tight">{brand}</p>
+              <p className="-mt-0.5 text-[12px] text-text-soft">{tagline}</p>
             </div>
           </div>
           <h2 className="mt-12 text-[28px] font-bold leading-tight">
@@ -99,7 +99,7 @@ export function AuthScreen({ mode }: { mode: 'login' | 'register' }) {
             {mode === 'register' ? (
               <>{t('Already have an account?')} <Link to="/login" className="font-semibold text-volt">{t('Sign in')}</Link></>
             ) : (
-              <>{t('New to Voltway?')} <Link to="/register" className="font-semibold text-volt">{t('Create one')}</Link></>
+              <>{t('New here?')} <Link to="/register" className="font-semibold text-volt">{t('Create one')}</Link></>
             )}
           </p>
           <p className="text-[10px] uppercase tracking-wider text-text-faint">Powered by the Phevnix eMSP API</p>

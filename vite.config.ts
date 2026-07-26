@@ -8,8 +8,19 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const target = env.VITE_EMSP_BASE_URL || 'https://api.phevnix.cloud';
+  // The brand is applied to the DOM at runtime, but index.html is what a crawler, a link preview and
+  // the first paint see — so bake the name in at build time too. Without this a white-labelled
+  // deployment still shows "Voltway" in the tab, in bookmarks and in every shared link.
+  const brandName = env.VITE_BRAND_NAME || 'Voltway';
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'brand-index-html',
+        transformIndexHtml: (html) => html.replaceAll('%BRAND_NAME%', brandName),
+      },
+    ],
     server: {
       port: 5173,
       proxy: {

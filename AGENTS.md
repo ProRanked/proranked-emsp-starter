@@ -64,6 +64,14 @@ trust a `200`. Do not start mocking data because a list came back empty.
 
 ## Re-branding (the most common task)
 
+**Prefer the built-in white-label over editing code.** `.env` accepts `VITE_BRAND_NAME`,
+`VITE_BRAND_TAGLINE`, `VITE_BRAND_PRIMARY`, `VITE_BRAND_SECONDARY`, `VITE_BRAND_LOGO` and the app
+re-skins itself at runtime — no source changes.
+
+**Quote the hex values** (`VITE_BRAND_PRIMARY="#f5a524"`). Unquoted, the `#` is parsed as a comment,
+the variable arrives empty, and the app silently keeps the default brand. If a re-brand "doesn't take",
+check this first — it fails silently.
+
 - Colours, fonts, radii → `src/index.css` / the design tokens.
 - Brand name + logo → `src/components/BrandLogo.tsx`, `src/context/BrandingProvider.tsx`.
 - Screens live in `src/screens/`, shared pieces in `src/components/`.

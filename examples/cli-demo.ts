@@ -17,8 +17,8 @@
  * them; they belong to a server-side integration, not a driver app.
  *
  * Configure via environment (or a .env you load yourself):
- *   EMSP_BASE_URL   gateway URL      (default https://api.phevnix.cloud — the lab)
- *   EMSP_API_KEY    publishable key  (phx_...)              [required]
+ *   EMSP_BASE_URL   gateway URL      (default https://api.proranked.com)
+ *   EMSP_API_KEY    publishable key  (pr_pk_...)              [required]
  *   DRIVER_EMAIL    driver login email                      [required]
  *   DRIVER_PASSWORD driver password                         [required]
  *   REGISTER        "true" to register the driver first
@@ -30,7 +30,7 @@
 
 import { PhevnixApiError, PhevnixEmspClient } from '../src/lib/phevnix.ts';
 
-const BASE_URL = process.env.EMSP_BASE_URL ?? 'https://api.phevnix.cloud';
+const BASE_URL = process.env.EMSP_BASE_URL ?? 'https://api.proranked.com';
 const API_KEY = required('EMSP_API_KEY');
 const EMAIL = required('DRIVER_EMAIL');
 const PASSWORD = required('DRIVER_PASSWORD');

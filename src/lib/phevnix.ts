@@ -12,9 +12,9 @@
  */
 
 export interface PhevnixEmspClientOptions {
-  /** Gateway base URL, e.g. https://api-v2.phevnix.com or https://api.phevnix.cloud (lab). */
+  /** Gateway base URL, e.g. https://api.proranked.com */
   baseUrl: string;
-  /** Your publishable eMSP API key (phx_...). Safe to ship in client apps. */
+  /** Your publishable eMSP API key (pr_pk_...). Safe to ship in client apps. */
   apiKey: string;
   /** Optional: an existing driver access token to start authenticated. */
   accessToken?: string;

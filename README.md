@@ -12,13 +12,21 @@ charging infrastructure of their own — just a publishable API key.
 
 This repo is a **starter kit**. To build your own eMobility app:
 
-1. **Get a publishable key** — Portal → Developer → create an eMSP (publishable) key. It
-   starts with `phx_`, is read-only until a driver logs in, and is safe to ship in a client app.
-2. **Drop it in** — `cp .env.example .env`, set `VITE_EMSP_API_KEY=phx_…`, `npm install`,
+1. **Get a publishable key** — create an eMSP (publishable) key at
+   [app.proranked.com/api-keys](https://app.proranked.com/api-keys). It starts with `pr_pk_`,
+   is read-only until a driver logs in, and is safe to ship in a client app.
+2. **Drop it in** — `cp .env.example .env`, set `VITE_EMSP_API_KEY=pr_pk_…`, `npm install`,
    `npm run dev`. That's it — the app is now running on *your* network's data.
 3. **Re-skin and remix** — change the brand in `src/styles.css` + `AuthScreen`, keep or
    replace any screen. Every API call lives in one typed file: [`src/lib/phevnix.ts`](src/lib/phevnix.ts).
    That file *is* the SDK and the complete API reference — every `/emsp/v1` endpoint is a method.
+
+**Building with an AI agent?** Two files are written for exactly that:
+
+- **[PROMPTS.md](./PROMPTS.md)** — copy-paste prompts (re-brand it, add a screen, wire the full
+  charging flow) for Claude Code or Cursor.
+- **[CLAUDE.md](./CLAUDE.md)** — the contract an agent should read first: base URL, the two-part
+  auth rule, response shapes, and what *not* to do. Auto-loaded by Claude Code.
 
 **Vibe-coding with an LLM?** Point it at `src/lib/phevnix.ts` and paste a prompt like:
 
@@ -60,13 +68,13 @@ A real driver journey, every screen backed by a live `/emsp/v1` call:
 Requires **Node 20+**.
 
 ```bash
-cp .env.example .env        # set VITE_EMSP_API_KEY (publishable phx_… key)
+cp .env.example .env        # set VITE_EMSP_API_KEY (publishable pr_pk_… key)
 npm install
 npm run dev                 # → http://localhost:5173
 ```
 
 Vite proxies `/emsp/*` to the gateway (`VITE_EMSP_BASE_URL`, default the lab
-`https://api.phevnix.cloud`), so there's no CORS to configure in dev. On first run, tap
+`https://api.proranked.com`), so there's no CORS to configure in dev. On first run, tap
 **Create one** to register a driver, then you're in.
 
 ```bash
@@ -111,7 +119,7 @@ examples/
 The CLI demo is a quick way to exercise every endpoint from a terminal:
 
 ```bash
-EMSP_API_KEY=phx_… DRIVER_EMAIL=you@example.test DRIVER_PASSWORD=… REGISTER=true \
+EMSP_API_KEY=pr_pk_… DRIVER_EMAIL=you@example.test DRIVER_PASSWORD=… REGISTER=true \
   node --experimental-strip-types examples/cli-demo.ts
 ```
 
